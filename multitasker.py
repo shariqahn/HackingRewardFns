@@ -3,8 +3,11 @@ import gym_foo
 import itertools
 from collections import defaultdict
 import numpy as np
+import matplotlib.pyplot as plt
+# import ipdb
 
-def test_single_approach(task_generator, approach, total_num_tasks=50):
+
+def test_single_approach(task_generator, approach, total_num_tasks=30):
     results = []
     task = task_generator('foo-v0')
     approach = approach(task.get_actions(), task.get_rewards)
@@ -15,7 +18,7 @@ def test_single_approach(task_generator, approach, total_num_tasks=50):
 
     return results
 
-def run_approach_on_task(approach, task, max_num_steps=500):
+def run_approach_on_task(approach, task, max_num_steps=100):
     # increase num steps to ~1000
     # Task is a Gym env
     state = task.reset()
@@ -42,7 +45,6 @@ class TaskGenerator:
         self.env = gym.make(env_name)
 
     def reset(self):
-        # self.env.randomize_map()
         self.env.randomize_rewards()
         state = self.env.reset()
         return state
@@ -91,7 +93,6 @@ class RandomPolicyApproach(Approach):
         index = randint(0,3) # hacky! fix action space
         return self.action_space[index]
 
-import ipdb
 
 class SingleTaskQLearningApproach(Approach):
 
@@ -112,21 +113,39 @@ class SingleTaskQLearningApproach(Approach):
             index = randint(0,3) # hacky! fix action space
             return self.action_space[index]
         # Find action with max return in given state
+        return self.action_space[np.argmax(self.Q[state])] 
+
+    def observe(self, state, action, next_state, reward, done):
+        best_next_action = np.argmax(self.Q[next_state]) 
+        td_target = reward + self.discount_factor * self.Q[next_state][best_next_action]
+        action_index = self.action_space.index(action)
+        td_delta = td_target - self.Q[state][action_index]
+        # Update the Q function
+        self.Q[state][action_index] += self.alpha * td_delta
+
+
+class MultiTaskQLearningApproach(SingleTaskQLearningApproach):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.Q = defaultdict(lambda: np.zeros(len(self.action_space)))
+
+    def reset(self):
+        # print(self.Q)
+        pass
+
+class SingleTaskAugmentedQLearningApproach(SingleTaskQLearningApproach):
+    def get_action(self, state):
+        # Epsilon-greedy: take a random action with probability eps
+        if np.random.random() < self.eps:
+            # return self.action_space.sample()
+            index = randint(0,3) # hacky! fix action space
+            return self.action_space[index]
+        # Find action with max return in given state
         return self.action_space[np.argmax(self.Q[self.augment_state(state)])] 
 
     def observe(self, state, action, next_state, reward, done):
         augmented_next_state = self.augment_state(next_state)
         augmented_state = self.augment_state(state)
-
-        if done:
-            assert np.all(self.Q[next_state] == 0)
-
-        # best_next_action = np.argmax(self.Q[next_state]) 
-        # td_target = reward + self.discount_factor * self.Q[next_state][best_next_action]
-        # action_index = self.action_space.index(action)
-        # td_delta = td_target - self.Q[state][action_index]
-        # # Update the Q function
-        # self.Q[state][action_index] += self.alpha * td_delta
 
         best_next_action = np.argmax(self.Q[augmented_next_state]) 
         td_target = reward + self.discount_factor * self.Q[augmented_next_state][best_next_action]
@@ -140,7 +159,7 @@ class SingleTaskQLearningApproach(Approach):
         return str(new_state)
 
 
-class MultiTaskQLearningApproach(SingleTaskQLearningApproach):
+class MultiTaskAugmentedQLearningApproach(SingleTaskAugmentedQLearningApproach):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.Q = defaultdict(lambda: np.zeros(len(self.action_space)))
@@ -149,27 +168,50 @@ class MultiTaskQLearningApproach(SingleTaskQLearningApproach):
         # print(self.Q)
         pass
 
-results = test_single_approach(TaskGenerator, MultiTaskQLearningApproach)
-print(results)
+if __name__ == "__main__":
+    for approach in ('Random Policy', 'Single Task', 'Multitask', 'Single Task with Hacking', 'Multitask with Hacking'):
+        if approach == 'Random Policy':
+            approach_fn = RandomPolicyApproach
+            file = 'random.png'
+        elif approach == 'Single Task':
+            approach_fn = SingleTaskQLearningApproach
+            file = 'single_task.png'
+        elif approach == 'Multitask':
+            approach_fn = MultiTaskQLearningApproach
+            file = 'multitask.png'
+        elif approach == 'Single Task with Hacking':
+            approach_fn = SingleTaskAugmentedQLearningApproach
+            file = 'multitask_augmented.png'
+        elif approach == 'Multitask with Hacking':
+            approach_fn = MultiTaskAugmentedQLearningApproach
+            file = 'single_task_augmented.png'
 
-import matplotlib.pyplot as plt
+        num_tasks = 30
+        results = [0]*num_tasks
+        for i in range(25):
+            current = (test_single_approach(TaskGenerator, approach_fn))
+            for j in range(num_tasks):
+                results[j] += sum(current[j])/25.0
 
-# Data for plotting
-num_tasks = 50
-x = range(num_tasks)
-y = []
-for result in results:
-    y.append(sum(result))
 
-fig, ax = plt.subplots()
-ax.plot(x,y)
+        # Data for plotting
+        x = range(num_tasks)
+        y = results
 
-ax.set(xlabel='Number of Completed Tasks', ylabel='Return',
-       title='')
-ax.grid()
+        fig, ax = plt.subplots()
+        ax.plot(x,y)
 
-# fig.savefig("single_task_harder.png")
-plt.show()
+        ax.set(xlabel='Number of Completed Tasks', ylabel='Return',
+               title=str(approach))
+        ax.grid()
+
+        # fig.savefig(file)
+        plt.show()
+
+
+
+
+
 
 # plot returns
     # include random actions as baseline
@@ -189,4 +231,3 @@ plt.show()
     
 # try new approach with right hard coded policy
 # unit tests
-
