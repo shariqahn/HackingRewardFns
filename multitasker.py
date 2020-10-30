@@ -7,7 +7,7 @@ import numpy as np
 def test_single_approach(task_generator, approach, total_num_tasks=50):
     results = []
     task = task_generator('foo-v0')
-    approach = approach(task.get_actions(), task.get_rewards())
+    approach = approach(task.get_actions(), task.get_rewards)
 
     for task_num in range(total_num_tasks):
         result = run_approach_on_task(approach, task)
@@ -54,7 +54,7 @@ class TaskGenerator:
         return self.env.action_space
 
     def get_rewards(self):
-        return [self.env.pellet_reward, self.env.space_reward]
+        return self.env.reward_function
 
 import abc
 
@@ -112,7 +112,7 @@ class SingleTaskQLearningApproach(Approach):
             index = randint(0,3) # hacky! fix action space
             return self.action_space[index]
         # Find action with max return in given state
-        return self.action_space[np.argmax(self.Q[(state)])] 
+        return self.action_space[np.argmax(self.Q[self.augment_state(state)])] 
 
     def observe(self, state, action, next_state, reward, done):
         augmented_next_state = self.augment_state(next_state)
@@ -121,24 +121,22 @@ class SingleTaskQLearningApproach(Approach):
         if done:
             assert np.all(self.Q[next_state] == 0)
 
-
-        best_next_action = np.argmax(self.Q[next_state]) 
-        td_target = reward + self.discount_factor * self.Q[next_state][best_next_action]
-        action_index = self.action_space.index(action)
-        td_delta = td_target - self.Q[state][action_index]
-        # Update the Q function
-        self.Q[state][action_index] += self.alpha * td_delta
-
-        # best_next_action = np.argmax(self.Q[augmented_next_state]) 
-        # td_target = reward + self.discount_factor * self.Q[augmented_next_state][best_next_action]
+        # best_next_action = np.argmax(self.Q[next_state]) 
+        # td_target = reward + self.discount_factor * self.Q[next_state][best_next_action]
         # action_index = self.action_space.index(action)
-        # td_delta = td_target - self.Q[augmented_state][action_index]
+        # td_delta = td_target - self.Q[state][action_index]
         # # Update the Q function
-        # self.Q[augmented_state][action_index] += self.alpha * td_delta
+        # self.Q[state][action_index] += self.alpha * td_delta
+
+        best_next_action = np.argmax(self.Q[augmented_next_state]) 
+        td_target = reward + self.discount_factor * self.Q[augmented_next_state][best_next_action]
+        action_index = self.action_space.index(action)
+        td_delta = td_target - self.Q[augmented_state][action_index]
+        # Update the Q function
+        self.Q[augmented_state][action_index] += self.alpha * td_delta
 
     def augment_state(self, state):
-        new_state = [int(state[1]), int(state[4])] + self.reward_function
-        # ipdb.set_trace()
+        new_state = [int(state[1]), int(state[4])] + sorted(self.reward_function().items())
         return str(new_state)
 
 
