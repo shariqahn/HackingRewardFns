@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 # import ipdb
 
 from approaches.random_policy import RandomPolicyApproach
-from approaches.q_learning import SingleTaskQLearningApproach, MultiTaskQLearningApproach
+from approaches.q_learning import SingleTaskQLearningApproach, MultiTaskQLearningApproach, SingleTaskAugmentedQLearningApproach, MultiTaskAugmentedQLearningApproach
 
-def test_single_approach(task_generator, approach, total_num_tasks=50):
+def test_single_approach(task_generator, approach, total_num_tasks=30):
     results = []
     task = task_generator('foo-v0')
     approach = approach(task.get_actions(), task.get_rewards)
@@ -17,8 +17,7 @@ def test_single_approach(task_generator, approach, total_num_tasks=50):
 
     return results
 
-def run_approach_on_task(approach, task, max_num_steps=500):
-    # increase num steps to ~1000
+def run_approach_on_task(approach, task, max_num_steps=100):
     # Task is a Gym env
     state = task.reset()
     # Initialize the approach
@@ -87,9 +86,6 @@ if __name__ == "__main__":
 
         # Data for plotting
         x = range(num_tasks)
-        # y = []
-        # for result in results:
-        #     y.append(sum(result))
         y = results
 
         fig, ax = plt.subplots()
