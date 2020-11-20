@@ -1,8 +1,8 @@
 import gym
 from gym import error, spaces, utils
-from gym.utils import seeding
 import numpy as np
 from random import randint, choice
+# import ipdb
 
 class FooEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -16,13 +16,10 @@ class FooEnv(gym.Env):
         self.action_space = ['right', 'left', 'up', 'down'] #use openai action spaces instead!!!
         # self.randomize_rewards()
 
-    def randomize_rewards(self): 
-        pellet_reward = choice([-50,-1])
-        while True:
-            reward = choice([-50,-1])
-            if reward != pellet_reward:
-                space_reward = reward
-                break
+    def randomize_rewards(self, rng): 
+        all_possible_rewards = [-50, -1]
+        rng.shuffle(all_possible_rewards)
+        pellet_reward, space_reward = all_possible_rewards[0], all_possible_rewards[1]
 
         self.pellet_reward = pellet_reward
         self.space_reward = space_reward
@@ -77,11 +74,11 @@ class FooEnv(gym.Env):
 
         return str(self.state), reward, self.done, self.map
 
-    def reset(self):
+    def reset(self, rng):
+        self.randomize_rewards(rng)
         self.state = [0,0] 
         self.reward = 0
         self.done = False
-        # self.randomize_rewards()
         return str(self.state)
 
     def render(self, mode='human', close=False):

@@ -1,10 +1,11 @@
 from .approach import Approach
-from random import randint
+import numpy as np
 
 class RandomPolicyApproach(Approach):
 
-    def __init__(self, action_space, reward_function):
+    def __init__(self, action_space, reward_function, rng):
         self.action_space = action_space
+        self.rng = rng
 
     def reset(self):
         pass
@@ -14,5 +15,6 @@ class RandomPolicyApproach(Approach):
 
     def get_action(self, state):
         # return self.action_space.sample()
-        index = randint(0,3) # hacky! fix action space
-        return self.action_space[index]
+        # index = randint(0,3) # hacky! fix action space
+        return self.action_space[self.rng.randint(0,4)]
+        # return self.action_space[index]
