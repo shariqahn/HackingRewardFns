@@ -54,10 +54,10 @@ if __name__ == "__main__":
             file = 'multitask.png'
         elif approach == 'Single Task with Hacking':
             approach_fn = SingleTaskAugmentedQLearningApproach
-            file = 'multitask_augmented.png'
+            file = 'single_task_augmented.png'
         elif approach == 'Multitask with Hacking':
             approach_fn = MultiTaskAugmentedQLearningApproach
-            file = 'single_task_augmented.png'
+            file = 'multitask_augmented.png'
 
         num_tasks = 30
         results = [0]*num_tasks
@@ -82,4 +82,6 @@ if __name__ == "__main__":
 
         fig.savefig(file)
         # plt.show()
+
+# start integrating new env w approaches
 

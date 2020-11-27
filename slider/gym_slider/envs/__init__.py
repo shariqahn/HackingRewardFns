@@ -1,0 +1,1 @@
+from gym_slider.envs.slider_env import SliderEnv

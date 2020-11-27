@@ -1,6 +1,7 @@
 from .approach import Approach
 from collections import defaultdict
 import numpy as np
+import ipdb
 
 class SingleTaskQLearningApproach(Approach):
 
@@ -68,7 +69,7 @@ class SingleTaskAugmentedQLearningApproach(SingleTaskQLearningApproach):
         self.Q[augmented_state][action_index] += self.alpha * td_delta
 
     def augment_state(self, state):
-        # ipdb.set_trace()
+        ipdb.set_trace()
         new_state = [int(state[1]), int(state[4])] + sorted(self.reward_function.items())
         return str(new_state)
 
