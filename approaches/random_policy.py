@@ -3,11 +3,11 @@ import numpy as np
 
 class RandomPolicyApproach(Approach):
 
-    def __init__(self, action_space, reward_function, rng):
+    def __init__(self, action_space, rng):
         self.action_space = action_space
         self.rng = rng
 
-    def reset(self):
+    def reset(self, reward_function):
         pass
 
     def observe(self, state, action, next_state, reward, done):

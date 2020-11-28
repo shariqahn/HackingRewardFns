@@ -3,7 +3,7 @@ import abc
 class Approach:
         
     @abc.abstractmethod
-    def reset(self):
+    def reset(self, reward_function):
         raise NotImplementedError('Override me!')
 
     @abc.abstractmethod

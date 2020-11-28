@@ -10,8 +10,8 @@ from approaches.q_learning import SingleTaskQLearningApproach, MultiTaskQLearnin
 def test_single_approach(approach, rng, total_num_tasks=30):
     results = []
     task = gym.make('foo-v0')
-    task.reset(rng)
-    approach = approach(task.action_space, task.reward_function, rng)
+    # task.reset(rng)
+    approach = approach(task.action_space, rng)
 
     for task_num in range(total_num_tasks):
         result = run_approach_on_task(approach, task, rng)
@@ -23,7 +23,7 @@ def run_approach_on_task(approach, task, rng, max_num_steps=100):
     # Task is a Gym env
     state = task.reset(rng)
     # Initialize the approach
-    approach.reset()
+    approach.reset(task.reward_function)
     # Result is a list of all rewards seen
     result = []
     for t in range(max_num_steps):
