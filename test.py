@@ -26,6 +26,7 @@ def run_approach_on_task(approach, task, rng, max_num_steps=100):
     approach.reset(task.reward_function)
     # Result is a list of all rewards seen
     result = []
+    count = 0
     for t in range(max_num_steps):
         action = approach.get_action(state)
         next_state, reward, done, _ = task.step(action)
@@ -36,12 +37,16 @@ def run_approach_on_task(approach, task, rng, max_num_steps=100):
         if done:
             # break
             state = task.reset(rng)
+            approach.reset(task.reward_function)
             # reset environment without rerandomizing
             # allows agent to learn for longer
-    return result
+            count += 1
+    return result, count
 
 
 if __name__ == "__main__":
+    maximums = []
+    minimums = []
     for approach in ('Random Policy', 'Single Task', 'Multitask', 'Single Task with Hacking', 'Multitask with Hacking'):
         if approach == 'Random Policy':
             approach_fn = RandomPolicyApproach
@@ -61,27 +66,44 @@ if __name__ == "__main__":
 
         num_tasks = 30
         results = [0]*num_tasks
+        goals = [0]*num_tasks
         for i in range(25):
             rng = np.random.RandomState(i)
             # rng random num generator
             current = (test_single_approach(approach_fn, rng))
             for j in range(num_tasks):
-                results[j] += sum(current[j])/25.0
+                results[j] += sum(current[j][0])/25.0
+                goals[j] += current[j][1]/25.0
 
+        maximums.append(max(results))
+        minimums.append(min(results))
 
         # Data for plotting
         x = range(num_tasks)
-        y = results
+        # y = results
+
+        # fig, ax = plt.subplots()
+        # ax.plot(x,y)
+
+        # ax.set(xlabel='Number of Completed Tasks', ylabel='Return',
+        #        title=approach)
+        # ax.grid()
+
+        # fig.savefig(file)
+        # plt.show()
+
+        y = goals
 
         fig, ax = plt.subplots()
         ax.plot(x,y)
 
-        ax.set(xlabel='Number of Completed Tasks', ylabel='Return',
-               title=str(approach))
+        ax.set(xlabel='Number of Completed Tasks', ylabel='Number of Times Goal Reached',
+               title=approach)
         ax.grid()
 
-        fig.savefig(file)
-        # plt.show()
+        fig.savefig(file[:-4]+'_goals.png')
+    print("max: ", maximums)
+    print("min: ", minimums)
 
 # start integrating new env w approaches
 
