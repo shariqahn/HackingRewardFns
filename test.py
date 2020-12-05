@@ -27,10 +27,13 @@ def run_approach_on_task(approach, task, rng, max_num_steps=100):
     # Result is a list of all rewards seen
     result = []
     count = 0
+    # A list of all the states ever visited
+    all_states = [state]
     for t in range(max_num_steps):
         action = approach.get_action(state)
         next_state, reward, done, _ = task.step(action)
         result.append(reward)
+        all_states.append(next_state)
         # Tell the approach about the transition (for learning)
         approach.observe(state, action, next_state, reward, done)
         state = next_state
@@ -41,7 +44,7 @@ def run_approach_on_task(approach, task, rng, max_num_steps=100):
             # reset environment without rerandomizing
             # allows agent to learn for longer
             count += 1
-    return result, count
+    return result, count, all_states
 
 
 if __name__ == "__main__":
@@ -67,6 +70,7 @@ if __name__ == "__main__":
         num_tasks = 30
         results = [0]*num_tasks
         goals = [0]*num_tasks
+        state_visits = np.zeros((4, 4))
         for i in range(25):
             rng = np.random.RandomState(i)
             # rng random num generator
@@ -74,12 +78,15 @@ if __name__ == "__main__":
             for j in range(num_tasks):
                 results[j] += sum(current[j][0])/25.0
                 goals[j] += current[j][1]/25.0
+                for s in current[j][2]:
+                    r, c = eval(s)
+                    state_visits[r, c] += 1./25.0
 
         maximums.append(max(results))
         minimums.append(min(results))
 
         # Data for plotting
-        x = range(num_tasks)
+        # x = range(num_tasks)
         # y = results
 
         # fig, ax = plt.subplots()
@@ -92,16 +99,26 @@ if __name__ == "__main__":
         # fig.savefig(file)
         # plt.show()
 
-        y = goals
+        # y = goals
 
+        # fig, ax = plt.subplots()
+        # ax.plot(x,y)
+
+        # ax.set(xlabel='Number of Completed Tasks', ylabel='Number of Times Goal Reached',
+        #        title=approach)
+        # ax.grid()
+
+        # fig.savefig(file[:-4]+'_goals.png')
+
+        # Plot state visits
         fig, ax = plt.subplots()
-        ax.plot(x,y)
+        ax.set(title=approach)
+        ax.axis('off')
+        plt.imshow(state_visits, vmin=0, cmap='jet')
+        plt.colorbar()
+        fig.savefig(file[:-4]+'_state_visits.png')
 
-        ax.set(xlabel='Number of Completed Tasks', ylabel='Number of Times Goal Reached',
-               title=approach)
-        ax.grid()
 
-        fig.savefig(file[:-4]+'_goals.png')
     print("max: ", maximums)
     print("min: ", minimums)
 
