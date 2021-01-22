@@ -10,14 +10,17 @@ class FooEnv(gym.Env):
     def __init__(self):
 
         self.map = [['','','','.'],['.','.','.','.'],['','','.','.'],['.','','','G']]
+        # self.map = [['','','/','.'],['/','.','/','.'],['/','.','','.'],['/','','','G']]
         self.state = [0,0]
         self.reward = 0
         self.done = False
         self.action_space = ['right', 'left', 'up', 'down'] #use openai action spaces instead!!!
+        # self.action_space = spaces.Discrete(4)
         # self.randomize_rewards()
+        # self.observation_space = spaces.Box(0, 3, shape=(2,), dtype=np.float32)
 
     def randomize_rewards(self, rng): 
-        all_possible_rewards = [-50, -1]
+        all_possible_rewards = [-100, -1]
         rng.shuffle(all_possible_rewards)
         pellet_reward, space_reward = all_possible_rewards[0], all_possible_rewards[1]
 
@@ -36,6 +39,28 @@ class FooEnv(gym.Env):
 
         self.reward_function = rewards
         return rewards
+        # all_possible_rewards = [-100, -50, -1]
+        # rng.shuffle(all_possible_rewards)
+        # pellet_reward, space_reward, slash_reward = all_possible_rewards[0], all_possible_rewards[1], all_possible_rewards[2]
+
+        # self.pellet_reward = pellet_reward
+        # self.space_reward = space_reward
+        # self.slash_reward = slash_reward
+
+        # rewards = {}
+        # for i in range(len(self.map)):
+        #     for j in range(len(self.map[0])):
+        #         if self.map[i][j] == '.':
+        #             rewards[str([i,j])] = pellet_reward
+        #         elif self.map[i][j] == '':
+        #             rewards[str([i,j])] = space_reward
+        #         elif self.map[i][j] == '/':
+        #             rewards[str([i,j])] = slash_reward
+        #         else:
+        #             rewards[str([i,j])] = 10
+
+        # self.reward_function = rewards
+        # return rewards
 
     def randomize_map(self):
         new_map = [['','','',''],['','','',''],['','','',''],['','','','']]
@@ -66,6 +91,15 @@ class FooEnv(gym.Env):
             self.state[0] = (self.state[0] + 3) % 4
         else:
             self.state[0] = (self.state[0] + 1) % 4
+
+        # if action == 0:
+        #     self.state[1] = (self.state[1] + 1) % 4
+        # elif action == 1:
+        #     self.state[1] = (self.state[1] + 3) % 4
+        # elif action == 2:
+        #     self.state[0] = (self.state[0] + 3) % 4
+        # else:
+        #     self.state[0] = (self.state[0] + 1) % 4
 
         reward = self.reward_function[str([self.state[0], self.state[1]])]
         self.reward += reward
