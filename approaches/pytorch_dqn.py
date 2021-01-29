@@ -103,7 +103,7 @@ for i_episode in range(400):
     s = env.reset()
     ep_r = 0
     while True:
-        env.render()
+        # env.render()
         a = dqn.choose_action(s)
 
         # take action

@@ -4,7 +4,6 @@ from gym import spaces, logger
 from gym.utils import seeding
 import numpy as np
 
-# from stable_baselines.common.env_checker import check_env
 
 class SliderEnv(gym.Env):
     # metadata = {
@@ -17,8 +16,6 @@ class SliderEnv(gym.Env):
         self.force_mag = 10.0
         self.tau = 0.02  # seconds between state updates
 
-        self.target_velocity = -20
-
         self.viewer = None
         self.state = [0, 0]
         self.done = False
@@ -29,8 +26,8 @@ class SliderEnv(gym.Env):
         self.step_count = 0
 
     def randomize_rewards(self, rng):
-    	self.reward_function = 1
-
+        self.reward_function = (10, -1)
+        self.target_velocity = rng.randint(20,30)
 
     def step(self, action):
         x, x_dot = self.state
@@ -50,21 +47,19 @@ class SliderEnv(gym.Env):
         self.step_count += 1
 
         if self.done:
-            # reward = self.reward_function
-            reward = 10
+            reward = self.reward_function[0]
         else:
-            reward = -1
+            reward = self.reward_function[1]
             if self.step_count >= self.max_steps:
-                self.done = true
+                self.done = True
         	
-
         return np.array(self.state), reward, self.done, {}
-        # make done true after x steps
 
-    def reset(self):
-        # self.randomize_rewards(rng)
+    def reset(self, rng):
+        self.randomize_rewards(rng)
         self.state = [0,0]
         self.done = False
+        self.step_count = 0
         return np.array(self.state)
 
     def render(self, mode='human'):
@@ -74,6 +69,3 @@ class SliderEnv(gym.Env):
     #     if self.viewer:
     #         self.viewer.close()
     #         self.viewer = None
-
-# env = SliderEnv()
-# check_env(env)

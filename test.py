@@ -1,5 +1,6 @@
 import gym
 import gym_foo
+import gym_slider
 import matplotlib.pyplot as plt
 import numpy as np
 # import ipdb
@@ -8,9 +9,10 @@ from approaches.random_policy import RandomPolicyApproach
 from approaches.q_learning import SingleTaskQLearningApproach, MultiTaskQLearningApproach, SingleTaskAugmentedQLearningApproach, MultiTaskAugmentedQLearningApproach
 from approaches.dqn import SingleTaskDQN, MultiTaskDQN
 
-def test_single_approach(approach, rng, total_num_tasks=40):
+def test_single_approach(approach, rng, total_num_tasks=100):
     results = []
-    task = gym.make('foo-v0')
+    # task = gym.make('foo-v0')
+    task = gym.make('slider-v0')
     approach = approach(task.action_space, rng)
 
     results = run_approach_on_task(approach, task, rng, num_tasks=total_num_tasks)
@@ -52,8 +54,8 @@ def run_approach_on_task(approach, task, rng, num_tasks):
 if __name__ == "__main__":
     maximums = []
     minimums = []
-    for approach in ('Random Policy', 'Single Task', 'Multitask', 'Single Task with Hacking', 'Multitask with Hacking'):
-        # 'SingleTaskDQN', 'MultiTaskDQN'):
+    for approach in ('SingleTaskDQN', 'MultiTaskDQN'):
+    # ('Random Policy', 'Single Task', 'Multitask', 'Single Task with Hacking', 'Multitask with Hacking'):
         if approach == 'Random Policy':
             approach_fn = RandomPolicyApproach
             file = 'random.png'
@@ -76,7 +78,7 @@ if __name__ == "__main__":
             approach_fn = MultiTaskDQN
             file = 'multi_dqn.png'
 
-        num_tasks = 40
+        num_tasks = 100
         results = [0]*num_tasks
         goals = [0]*num_tasks
         # state_visits = np.zeros((4, 4))
