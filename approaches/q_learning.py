@@ -19,12 +19,8 @@ class SingleTaskQLearningApproach(Approach):
 
     def get_action(self, state):
         # Epsilon-greedy: take a random action with probability eps
-        # if np.random.random() < self.eps:
         if self.rng.random() < self.eps:
-            # return self.action_space.sample()
-            # index = randint(0,3) # hacky! fix action space
-            # return self.action_space[index]
-            return self.action_space[self.rng.randint(0,4)]
+            return self.action_space[self.rng.randint(0,4)] # hacky! fix action space
         # Find action with max return in given state
         return self.action_space[np.argmax(self.Q[state])] 
 
@@ -48,12 +44,8 @@ class MultiTaskQLearningApproach(SingleTaskQLearningApproach):
 class SingleTaskAugmentedQLearningApproach(SingleTaskQLearningApproach):
     def get_action(self, state):
         # Epsilon-greedy: take a random action with probability eps
-        # if np.random.random() < self.eps:
         if self.rng.random() < self.eps:
-            # return self.action_space.sample()
-            # index = randint(0,3) # hacky! fix action space
-            # return self.action_space[index]
-            return self.action_space[self.rng.randint(0,4)]
+            return self.action_space[self.rng.randint(0,4)] # hacky! fix action space
         # Find action with max return in given state
         return self.action_space[np.argmax(self.Q[self.augment_state(state)])] 
 

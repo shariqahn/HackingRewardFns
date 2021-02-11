@@ -1,6 +1,7 @@
 from .approach import Approach
 from collections import defaultdict
 import numpy as np
+# import ipdb
 
 import torch
 import torch.nn as nn
@@ -99,10 +100,61 @@ class SingleTaskDQN(Approach):
         self.optimizer.step()
 
 
-
 class MultiTaskDQN(SingleTaskDQN):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def reset(self, reward_function):
         self.reward_function = reward_function
+
+
+class SingleTaskAugmentedDQN(SingleTaskDQN):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.num_states = 3
+
+        self.eval_net, self.target_net = Net(self.num_states, self.num_actions), Net(self.num_states, self.num_actions)
+        self.learn_step_counter = 0                                     # for target updating
+        self.memory_counter = 0                                         # for storing memory
+        self.memory = np.zeros((self.memory_capacity, self.num_states * 2 + 2))     # initialize memory
+        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=self.alpha)
+        self.loss_func = nn.MSELoss()
+
+    def get_action(self, state):
+        augmented_state = self.augment_state(state)
+        state = torch.unsqueeze(torch.FloatTensor(augmented_state), 0)
+        # input only one sample
+        if self.rng.uniform() < self.eps:   # greedy
+            actions_value = self.eval_net.forward(state)
+            action = torch.max(actions_value, 1)[1].data.numpy()
+            action = action[0] if self.env_shape == 0 else action.reshape(self.env_shape)  # return the argmax index
+        else:   # random
+            action = self.rng.randint(0, self.num_actions)
+            action = action if self.env_shape == 0 else action.reshape(self.env_shape)
+        return action
+
+    def observe(self, state, action, next_state, reward, done):
+        state = self.augment_state(state)
+        next_state = self.augment_state(next_state)
+        transition = np.hstack((state, [action, reward], next_state))
+        # replace the old memory with new memory
+        index = self.memory_counter % self.memory_capacity
+        self.memory[index, :] = transition
+        self.memory_counter += 1
+        if self.memory_counter > self.memory_capacity:
+            self.learn()
+
+    def augment_state(self, state):
+        # query = self.reward_function(20)
+        query = self.reward_function
+        # ipdb.set_trace()
+        return np.append(state, query)
+        
+
+class MultiTaskAugmentedDQN(SingleTaskAugmentedDQN):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def reset(self, reward_function):
+        self.reward_function = reward_function
+

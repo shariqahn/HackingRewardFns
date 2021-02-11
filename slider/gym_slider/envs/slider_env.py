@@ -19,15 +19,19 @@ class SliderEnv(gym.Env):
         self.viewer = None
         self.state = [0, 0]
         self.done = False
-        # self.action_space = [0, 1]
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(-1000, 1000, shape=(2,), dtype=np.float32)
         self.max_steps = 100
         self.step_count = 0
 
     def randomize_rewards(self, rng):
-        self.reward_function = (10, -1)
-        self.target_velocity = rng.randint(20,30)
+        self.target_velocity = rng.randint(-50,50)
+        # self.target_velocity = -100
+        def rewards(x):
+            if x == self.target_velocity:
+                return 10
+            return -1
+        self.reward_function = self.target_velocity
 
     def step(self, action):
         x, x_dot = self.state
@@ -39,17 +43,22 @@ class SliderEnv(gym.Env):
 
         self.state = [x, x_dot]
 
+        # self.done = bool(
+        #     x > (self.target_velocity - 3)
+        #     and x < (self.target_velocity + 3)
+        # )
+
         self.done = bool(
-            x > (self.target_velocity - 3)
-            and x < (self.target_velocity + 3)
+            x_dot > (self.target_velocity - 3)
+            and x_dot < (self.target_velocity + 3)
         )
 
         self.step_count += 1
 
         if self.done:
-            reward = self.reward_function[0]
+            reward = 10
         else:
-            reward = self.reward_function[1]
+            reward = -1 * (self.target_velocity - x_dot)**2
             if self.step_count >= self.max_steps:
                 self.done = True
         	
