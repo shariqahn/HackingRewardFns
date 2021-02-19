@@ -28,14 +28,15 @@ class SingleTaskDQN(Approach):
         self.discount_factor = discount_factor # gamma
         self.alpha = alpha # learning rate
 
-
         self.rng = rng 
         self.batch_size = 32
         self.env_shape = 0 if isinstance(action_space.sample(), int) else action_space.sample().shape
         self.num_actions = action_space.n
-        self.num_states = 2 
         self.memory_capacity = 2000
+        self.net = False
 
+    def init_net(self, state):
+        self.num_states = len(state)
 
         self.eval_net, self.target_net = Net(self.num_states, self.num_actions), Net(self.num_states, self.num_actions)
         self.learn_step_counter = 0                                     # for target updating
@@ -44,19 +45,19 @@ class SingleTaskDQN(Approach):
         self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=self.alpha)
         self.loss_func = nn.MSELoss()
 
+        self.net = True
+
     def reset(self, reward_function):
         self.reward_function = reward_function
-        self.eval_net, self.target_net = Net(self.num_states, self.num_actions), Net(self.num_states, self.num_actions)
-        self.learn_step_counter = 0                                    
-        self.memory_counter = 0                                        
-        self.memory = np.zeros((self.memory_capacity, self.num_states * 2 + 2))   
-        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=self.alpha)
-        self.loss_func = nn.MSELoss()
+        self.net = False
 
-    def get_action(self, state):
-        state = torch.unsqueeze(torch.FloatTensor(state), 0)
+    def get_action(self, state, exploit=False):
+        processed_state = self.process_state(state)
+        if not self.net:
+            self.init_net(processed_state)
+        state = torch.unsqueeze(torch.FloatTensor(processed_state), 0)
         # input only one sample
-        if self.rng.uniform() < self.eps:   # greedy
+        if exploit or (self.rng.uniform() < self.eps):   # greedy
             actions_value = self.eval_net.forward(state)
             action = torch.max(actions_value, 1)[1].data.numpy()
             action = action[0] if self.env_shape == 0 else action.reshape(self.env_shape)  # return the argmax index
@@ -66,6 +67,8 @@ class SingleTaskDQN(Approach):
         return action
 
     def observe(self, state, action, next_state, reward, done):
+        state = self.process_state(state)
+        next_state = self.process_state(next_state)
         transition = np.hstack((state, [action, reward], next_state))
         # replace the old memory with new memory
         index = self.memory_counter % self.memory_capacity
@@ -99,6 +102,9 @@ class SingleTaskDQN(Approach):
         loss.backward()
         self.optimizer.step()
 
+    def process_state(self, state):
+        return state
+
 
 class MultiTaskDQN(SingleTaskDQN):
     def __init__(self, *args, **kwargs):
@@ -111,40 +117,8 @@ class MultiTaskDQN(SingleTaskDQN):
 class SingleTaskAugmentedDQN(SingleTaskDQN):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.num_states = 3
 
-        self.eval_net, self.target_net = Net(self.num_states, self.num_actions), Net(self.num_states, self.num_actions)
-        self.learn_step_counter = 0                                     # for target updating
-        self.memory_counter = 0                                         # for storing memory
-        self.memory = np.zeros((self.memory_capacity, self.num_states * 2 + 2))     # initialize memory
-        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=self.alpha)
-        self.loss_func = nn.MSELoss()
-
-    def get_action(self, state):
-        augmented_state = self.augment_state(state)
-        state = torch.unsqueeze(torch.FloatTensor(augmented_state), 0)
-        # input only one sample
-        if self.rng.uniform() < self.eps:   # greedy
-            actions_value = self.eval_net.forward(state)
-            action = torch.max(actions_value, 1)[1].data.numpy()
-            action = action[0] if self.env_shape == 0 else action.reshape(self.env_shape)  # return the argmax index
-        else:   # random
-            action = self.rng.randint(0, self.num_actions)
-            action = action if self.env_shape == 0 else action.reshape(self.env_shape)
-        return action
-
-    def observe(self, state, action, next_state, reward, done):
-        state = self.augment_state(state)
-        next_state = self.augment_state(next_state)
-        transition = np.hstack((state, [action, reward], next_state))
-        # replace the old memory with new memory
-        index = self.memory_counter % self.memory_capacity
-        self.memory[index, :] = transition
-        self.memory_counter += 1
-        if self.memory_counter > self.memory_capacity:
-            self.learn()
-
-    def augment_state(self, state):
+    def process_state(self, state):
         # query = self.reward_function(20)
         query = self.reward_function
         # ipdb.set_trace()
@@ -157,4 +131,38 @@ class MultiTaskAugmentedDQN(SingleTaskAugmentedDQN):
 
     def reset(self, reward_function):
         self.reward_function = reward_function
+
+
+class MultiTaskAugmentedOracle(MultiTaskAugmentedDQN):
+    def process_state(self, state):
+        # query = self.reward_function(20)
+        query = self.reward_function._target_velocity
+        # ipdb.set_trace()
+        return np.append(state, query)
+
+
+class MultiTaskDQNOneQuery(MultiTaskAugmentedDQN):
+    def process_state(self, state):
+        # query = self.reward_function(20)
+        # query = [1,1, self.reward_function(np.array([1,1])) ]
+        
+        # return np.array([state[0], state[1], np.array(query)])
+
+        query = self.reward_function(np.array([1,1]))
+        # ipdb.set_trace()
+        return np.append(state, query)
+
+
+class MultiTaskDQNTwoQuery(MultiTaskAugmentedDQN):
+    def process_state(self, state):
+        # query = self.reward_function(20)
+        # query = []
+        # query.append([1,1, self.reward_function(np.array([1,1])) ])
+        # query.append([-1,-1, self.reward_function(np.array([-1,-1]))])
+        # # ipdb.set_trace()
+        # return np.array([state[0], state[1], np.array(query)])
+
+        query = [self.reward_function(np.array([1,1])), self.reward_function(np.array([-1,-1]))]
+        # ipdb.set_trace()
+        return np.append(state, query)
 
