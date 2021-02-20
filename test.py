@@ -10,7 +10,8 @@ from approaches.q_learning import SingleTaskQLearningApproach, MultiTaskQLearnin
 from approaches.dqn import MultiTaskAugmentedOracle, SingleTaskDQN, MultiTaskDQN, SingleTaskAugmentedDQN, MultiTaskAugmentedDQN, MultiTaskDQNOneQuery, MultiTaskDQNTwoQuery
 
 
-num_tasks = 1000
+num_tasks = 600
+eval_interval = 10
 def test_single_approach(approach, rng, total_num_tasks=num_tasks):
     results = []
     # task = gym.make('foo-v0')
@@ -36,7 +37,7 @@ def run_approach_on_task(approach, task, rng, num_tasks):
     targets = [task.target_velocity]
     eval_results = [] # no e-greedy
     while len(results) < num_tasks:
-        if len(results) % 10 == 0:
+        if len(results) % eval_interval == 0:
             action = approach.get_action(state, True)
         else:
             action = approach.get_action(state)
@@ -55,7 +56,7 @@ def run_approach_on_task(approach, task, rng, num_tasks):
             # reset environment without rerandomizing
             # allows agent to learn for longer
             # count += 1
-            if len(results) % 10 == 0:
+            if len(results) % eval_interval == 0:
                 eval_results.append(result)
                 diff = -1
                 if (actions[0] == 0 and task.target_velocity <= 0) or (actions[0] == 1 and task.target_velocity >= 0):
@@ -68,12 +69,13 @@ def run_approach_on_task(approach, task, rng, num_tasks):
                     diff += 1 
                 differences.append(diff)
 
-            if len(results) % 100 == 0:
+            if len(results) % 10*eval_interval == 0:
                 print(f"Finished trial {len(results)}/{num_tasks} with returns {sum(result):6.0f}", end='\r')
             results.append(result)
 
             result = []
             actions = []
+    print()
     return eval_results, differences, targets[:-1]
     # , count
     # , all_states
@@ -126,7 +128,7 @@ if __name__ == "__main__":
             approach_fn = MultiTaskDQNTwoQuery
             file += 'eval_multi_augmented_dqn_2_query.pkl'
 
-        final_num_tasks = num_tasks//10
+        final_num_tasks = num_tasks//eval_interval
         results = [0]*final_num_tasks
         # goals = [0]*final_num_tasks 
         

@@ -1,7 +1,8 @@
 import pickle 
 import matplotlib.pyplot as plt
+import numpy as np
 
-from test import num_tasks
+from test import num_tasks, eval_interval
 from test_env import max_returns
 
 
@@ -44,7 +45,7 @@ for approach in (
     save_to = 'figures/' + file[:-4] + '.png'
     
     # Data for plotting
-    x = range(num_eval_tasks)
+    x = eval_interval*np.arange(num_eval_tasks)
     y = results
 
     fig, ax = plt.subplots()
@@ -82,7 +83,7 @@ for approach in (
     plt.savefig(save_to[:-4] + '_reference.png')
 
     # plot of scores
-    x = range(num_eval_tasks)
+    x = eval_interval*np.arange(num_eval_tasks)
     z = scores
 
     fig, ax = plt.subplots()
