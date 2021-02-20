@@ -10,7 +10,7 @@ from approaches.q_learning import SingleTaskQLearningApproach, MultiTaskQLearnin
 from approaches.dqn import MultiTaskAugmentedOracle, SingleTaskDQN, MultiTaskDQN, SingleTaskAugmentedDQN, MultiTaskAugmentedDQN, MultiTaskDQNOneQuery, MultiTaskDQNTwoQuery
 
 
-num_tasks = 100
+num_tasks = 1000
 def test_single_approach(approach, rng, total_num_tasks=num_tasks):
     results = []
     # task = gym.make('foo-v0')
@@ -68,8 +68,10 @@ def run_approach_on_task(approach, task, rng, num_tasks):
                     diff += 1 
                 differences.append(diff)
 
+            if len(results) % 100 == 0:
+                print(f"Finished trial {len(results)}/{num_tasks} with returns {sum(result):6.0f}", end='\r')
             results.append(result)
-            
+
             result = []
             actions = []
     return eval_results, differences, targets[:-1]
@@ -78,7 +80,12 @@ def run_approach_on_task(approach, task, rng, num_tasks):
 
 
 if __name__ == "__main__":
-    for approach in ('MultiTaskAugmentedOracle', 'MultiTaskDQNOneQuery', 'MultiTaskDQNTwoQuery'):
+    for approach in (
+        'MultiTaskAugmentedOracle',
+        'MultiTaskDQNOneQuery',
+        'MultiTaskDQNTwoQuery',
+        'MultiTaskDQN'
+        ):
         print(approach)
     # ('Random Policy', 'Single Task', 'Multitask', 'Single Task with Hacking', 'Multitask with Hacking'):
         file = 'results/'
@@ -124,7 +131,9 @@ if __name__ == "__main__":
         # goals = [0]*final_num_tasks 
         
         # state_visits = np.zeros((4, 4))
-        for i in range(25):
+        num_seeds = 25
+        for i in range(num_seeds):
+            print(f"*** STARTING SEED {i} for approach {approach} ***")
             if i == 0:
                 difference = [0]*final_num_tasks #difference bw returns and target velocities
 
@@ -135,7 +144,7 @@ if __name__ == "__main__":
 
             for j in range(final_num_tasks):
                 episode_return = sum(rewards[j])
-                results[j] += episode_return/25.0
+                results[j] += episode_return/num_seeds
 
                 # goals[j] += current[j][1]/25.0
                 # for s in current[j][2]:
