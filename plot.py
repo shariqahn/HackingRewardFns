@@ -1,12 +1,18 @@
 import pickle 
 import matplotlib.pyplot as plt
+import numpy as np
 
-from test import num_tasks
+from test import num_tasks, eval_interval
 from test_env import max_returns
 
 
 # print(pickle.load(open("sample.pkl",'rb')))
-for approach in ('MultiTaskAugmentedOracle', 'MultiTaskDQNOneQuery', 'MultiTaskDQNTwoQuery'):
+for approach in (
+    'MultiTaskAugmentedOracle',
+    'MultiTaskDQNOneQuery',
+    'MultiTaskDQNTwoQuery',
+    'MultiTaskDQN'
+    ):
     print(approach)
 # ('Random Policy', 'Single Task', 'Multitask', 'Single Task with Hacking', 'Multitask with Hacking'):
     # if approach == 'Random Policy':
@@ -39,7 +45,7 @@ for approach in ('MultiTaskAugmentedOracle', 'MultiTaskDQNOneQuery', 'MultiTaskD
     save_to = 'figures/' + file[:-4] + '.png'
     
     # Data for plotting
-    x = range(num_eval_tasks)
+    x = eval_interval*np.arange(num_eval_tasks)
     y = results
 
     fig, ax = plt.subplots()
@@ -47,7 +53,7 @@ for approach in ('MultiTaskAugmentedOracle', 'MultiTaskDQNOneQuery', 'MultiTaskD
 
     ax.set(xlabel='Number of Episodes', ylabel='Return',
            title=approach)
-    ax.set_ylim(ymax=0, ymin=-1000000)
+    ax.set_ylim(ymax=0, ymin=-1e4)
     ax.grid()
 
     fig.savefig(save_to)
@@ -77,7 +83,7 @@ for approach in ('MultiTaskAugmentedOracle', 'MultiTaskDQNOneQuery', 'MultiTaskD
     plt.savefig(save_to[:-4] + '_reference.png')
 
     # plot of scores
-    x = range(num_eval_tasks)
+    x = eval_interval*np.arange(num_eval_tasks)
     z = scores
 
     fig, ax = plt.subplots()

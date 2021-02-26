@@ -163,6 +163,16 @@ class MultiTaskDQNTwoQuery(MultiTaskAugmentedDQN):
         # return np.array([state[0], state[1], np.array(query)])
 
         query = [self.reward_function(np.array([1,1])), self.reward_function(np.array([-1,-1]))]
+
+        # Debug: check that we can recover the target velocity
+        # if query[0] == query[1]:
+        #     v = 0
+        # else:
+        #     v = np.mean(np.sqrt(-np.array(query)))
+        #     if query[0] < query[1]:
+        #         v *= -1
+        # assert v == self.reward_function._target_velocity
+
         # ipdb.set_trace()
         return np.append(state, query)
 
