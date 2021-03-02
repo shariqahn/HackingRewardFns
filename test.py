@@ -58,15 +58,20 @@ def run_approach_on_task(approach, task, rng, num_tasks):
             # count += 1
             if len(results) % eval_interval == 0:
                 eval_results.append(result)
-                diff = -1
+                diff = 0
                 if (actions[0] == 0 and task.target_velocity <= 0) or (actions[0] == 1 and task.target_velocity >= 0):
                     diff += 1
-                consistent = True
+                # consistent = True
+                # for a in actions:
+                #     if a != actions[0]:
+                #         consistent = False
+                # if consistent:
+                #     diff += 1 
+                consistent = 0
                 for a in actions:
-                    if a != actions[0]:
-                        consistent = False
-                if consistent:
-                    diff += 1 
+                    if a == actions[0]:
+                        consistent += 1
+                diff += consistent/len(actions)
                 differences.append(diff)
 
             if len(results) % 10*eval_interval == 0:

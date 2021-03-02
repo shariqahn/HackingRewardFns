@@ -119,8 +119,7 @@ class SingleTaskAugmentedDQN(SingleTaskDQN):
         super().__init__(*args, **kwargs)
 
     def process_state(self, state):
-        # query = self.reward_function(20)
-        query = self.reward_function
+        query = self.reward_function._target
         # ipdb.set_trace()
         return np.append(state, query)
         
@@ -135,34 +134,21 @@ class MultiTaskAugmentedDQN(SingleTaskAugmentedDQN):
 
 class MultiTaskAugmentedOracle(MultiTaskAugmentedDQN):
     def process_state(self, state):
-        # query = self.reward_function(20)
-        query = self.reward_function._target_velocity
+        query = self.reward_function._target
         # ipdb.set_trace()
         return np.append(state, query)
 
 
 class MultiTaskDQNOneQuery(MultiTaskAugmentedDQN):
     def process_state(self, state):
-        # query = self.reward_function(20)
-        # query = [1,1, self.reward_function(np.array([1,1])) ]
-        
-        # return np.array([state[0], state[1], np.array(query)])
-
-        query = self.reward_function(np.array([1,1]))
+        query = self.reward_function(np.array([1,1]),1, np.array([2,2])) 
         # ipdb.set_trace()
         return np.append(state, query)
 
 
 class MultiTaskDQNTwoQuery(MultiTaskAugmentedDQN):
     def process_state(self, state):
-        # query = self.reward_function(20)
-        # query = []
-        # query.append([1,1, self.reward_function(np.array([1,1])) ])
-        # query.append([-1,-1, self.reward_function(np.array([-1,-1]))])
-        # # ipdb.set_trace()
-        # return np.array([state[0], state[1], np.array(query)])
-
-        query = [self.reward_function(np.array([1,1])), self.reward_function(np.array([-1,-1]))]
+        query = [self.reward_function(np.array([1,1]),1, np.array([2,2])), self.reward_function(np.array([-1,-1]),1, np.array([0,0]))]
 
         # Debug: check that we can recover the target velocity
         # if query[0] == query[1]:
@@ -171,7 +157,7 @@ class MultiTaskDQNTwoQuery(MultiTaskAugmentedDQN):
         #     v = np.mean(np.sqrt(-np.array(query)))
         #     if query[0] < query[1]:
         #         v *= -1
-        # assert v == self.reward_function._target_velocity
+        # assert v == self.reward_function._target
 
         # ipdb.set_trace()
         return np.append(state, query)
