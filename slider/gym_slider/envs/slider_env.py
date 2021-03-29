@@ -3,9 +3,9 @@ import gym
 from gym import spaces, logger
 from gym.utils import seeding
 import numpy as np
+from environment import Environment
 
-
-class SliderEnv(gym.Env):
+class SliderEnv(gym.Env, Environment):
     # metadata = {
     #     'render.modes': ['human', 'rgb_array'],
     #     'video.frames_per_second': 50
@@ -23,19 +23,19 @@ class SliderEnv(gym.Env):
         self.done = False
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(-1000, 1000, shape=(2,), dtype=np.float32)
-        self.max_steps = 25
-        self.step_count = 0
+        # self.max_steps = 25
+        # self.step_count = 0
 
     def randomize_rewards(self, rng):
         self.target = rng.choice(self.possible_targets)
+        self.reward_function = self.get_reward
 
-        def rewards(state, action, next_state):
-            if state[1] == self.target:
-                return 10
-            return -1 * self.reward_scale * (self.target - state[1])**2
-        # self.reward_function = self.target
-        self.reward_function = rewards
-        self.reward_function._target = self.target
+    def get_reward(self, state, action, next_state, target=False):
+        if target:
+            return self.target
+        if state[1] == self.target:
+            return 10
+        return -1 * self.reward_scale * (self.target - state[1])**2
 
     def step(self, action):
         x, x_dot = self.state
@@ -53,12 +53,12 @@ class SliderEnv(gym.Env):
             and x_dot < (self.target + 3)
         )
 
-        self.step_count += 1
+        # self.step_count += 1
 
-        reward = self.reward_function(self.state)
+        reward = self.reward_function(self.state, None, None)
 
-        if self.step_count >= self.max_steps:
-            self.done = True
+        # if self.step_count >= self.max_steps:
+        #     self.done = True
 
         return np.array(self.state), reward, self.done, {}
 
@@ -66,7 +66,7 @@ class SliderEnv(gym.Env):
         self.randomize_rewards(rng)
         self.state = [0,0]
         self.done = False
-        self.step_count = 0
+        # self.step_count = 0
         return np.array(self.state)
 
     def render(self, mode='human'):

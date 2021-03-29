@@ -31,7 +31,8 @@ class SingleTaskDQN(Approach):
         self.rng = rng 
         self.batch_size = 32
         self.env_shape = 0 if isinstance(action_space.sample(), int) else action_space.sample().shape
-        self.num_actions = action_space.n
+        # self.num_actions = action_space.n
+        self.num_actions = action_space.shape[0]
         self.memory_capacity = 2000
         self.net = False
 
@@ -134,7 +135,7 @@ class MultiTaskAugmentedDQN(SingleTaskAugmentedDQN):
 
 class MultiTaskAugmentedOracle(MultiTaskAugmentedDQN):
     def process_state(self, state):
-        query = self.reward_function._target
+        query = self.reward_function(None, None, None, True)
         # ipdb.set_trace()
         return np.append(state, query)
 

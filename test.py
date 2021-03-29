@@ -5,18 +5,22 @@ import numpy as np
 import torch
 import pickle
 
+from cheetah import HalfCheetah
+
 from approaches.random_policy import RandomPolicyApproach
 from approaches.q_learning import SingleTaskQLearningApproach, MultiTaskQLearningApproach, SingleTaskAugmentedQLearningApproach, MultiTaskAugmentedQLearningApproach
 from approaches.dqn import MultiTaskAugmentedOracle, SingleTaskDQN, MultiTaskDQN, SingleTaskAugmentedDQN, MultiTaskAugmentedDQN, MultiTaskDQNOneQuery, MultiTaskDQNTwoQuery
-
+from approaches.ddpg import SingleTaskDDPG
 
 num_tasks = 600
 eval_interval = 10
 def test_single_approach(approach, rng, total_num_tasks=num_tasks):
     results = []
     # task = gym.make('foo-v0')
-    task = gym.make('slider-v0')
-    approach = approach(task.action_space, rng)
+    # task = gym.make('slider-v0')
+    # task = HalfCheetah()
+    task = gym.make('MountainCarContinuous-v0')
+    approach = approach(task.action_space, task.observation_space, rng)
 
     results = run_approach_on_task(approach, task, rng, num_tasks=total_num_tasks)
     return results
@@ -24,7 +28,6 @@ def test_single_approach(approach, rng, total_num_tasks=num_tasks):
 def run_approach_on_task(approach, task, rng, num_tasks):
     # Task is a Gym env
     state = task.reset(rng)
-    # Initialize the approach
     approach.reset(task.reward_function)
     # Result is a list of all rewards seen
     result = []
@@ -34,8 +37,10 @@ def run_approach_on_task(approach, task, rng, num_tasks):
     # all_states = [state]
     results = [] # includes e-greedy results
     differences = []
-    targets = [task.target_velocity]
+    targets = [task.target]
     eval_results = [] # no e-greedy
+    step_count = 0
+    num_steps = 25
     while len(results) < num_tasks:
         if len(results) % eval_interval == 0:
             action = approach.get_action(state, True)
@@ -43,6 +48,9 @@ def run_approach_on_task(approach, task, rng, num_tasks):
             action = approach.get_action(state)
         actions.append(action)
         next_state, reward, done, _ = task.step(action)
+        step_count += 1
+        if not done:
+            done = step_count == num_steps
         result.append(reward)
         # all_states.append(next_state)
         # Tell the approach about the transition (for learning)
@@ -52,21 +60,16 @@ def run_approach_on_task(approach, task, rng, num_tasks):
             # break
             state = task.reset(rng)
             approach.reset(task.reward_function)
-            targets.append(task.target_velocity)
+            targets.append(task.target)
+            step_count = 0
             # reset environment without rerandomizing
             # allows agent to learn for longer
             # count += 1
             if len(results) % eval_interval == 0:
                 eval_results.append(result)
                 diff = 0
-                if (actions[0] == 0 and task.target_velocity <= 0) or (actions[0] == 1 and task.target_velocity >= 0):
+                if (actions[0] == 0 and task.target <= 0) or (actions[0] == 1 and task.target >= 0):
                     diff += 1
-                # consistent = True
-                # for a in actions:
-                #     if a != actions[0]:
-                #         consistent = False
-                # if consistent:
-                #     diff += 1 
                 consistent = 0
                 for a in actions:
                     if a == actions[0]:
@@ -88,10 +91,11 @@ def run_approach_on_task(approach, task, rng, num_tasks):
 
 if __name__ == "__main__":
     for approach in (
-        'MultiTaskAugmentedOracle',
-        'MultiTaskDQNOneQuery',
-        'MultiTaskDQNTwoQuery',
-        'MultiTaskDQN'
+        'SingleTaskDDPG',
+        # 'MultiTaskAugmentedOracle',
+        # 'MultiTaskDQNOneQuery',
+        # 'MultiTaskDQNTwoQuery',
+        # 'MultiTaskDQN'
         ):
         print(approach)
     # ('Random Policy', 'Single Task', 'Multitask', 'Single Task with Hacking', 'Multitask with Hacking'):
@@ -132,6 +136,9 @@ if __name__ == "__main__":
         elif approach == 'MultiTaskDQNTwoQuery':
             approach_fn = MultiTaskDQNTwoQuery
             file += 'eval_multi_augmented_dqn_2_query.pkl'
+        elif approach == 'SingleTaskDDPG':
+            approach_fn = SingleTaskDDPG
+            file += 'SingleTaskDDPG.pkl'
 
         final_num_tasks = num_tasks//eval_interval
         results = [0]*final_num_tasks

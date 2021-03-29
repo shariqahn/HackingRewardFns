@@ -5,7 +5,10 @@ class Environment:
     @abc.abstractmethod
     def randomize_rewards(self, rng):
         raise NotImplementedError('Override me!')
-        # check reward fn somehow?
+
+    @abc.abstractmethod
+    def get_reward(self, state, action, next_state, target=False):
+        raise NotImplementedError('Override me!')
 
     @abc.abstractmethod
     def step(self, action):

@@ -23,11 +23,12 @@ class HalfCheetahRandDirecEnv(MujocoEnv, gym.utils.EzPickle):
     def randomize_rewards(self, rng):
         self.target = rng.choice(self.possible_targets)
 
-        def rewards(state, action, next_state):
-            pass
         # self.reward_function = self.target
         self.reward_function = rewards
         self.reward_function._target = self.target
+
+    def get_reward(self, state, action, next_state):
+        pass
 
     def step(self, action):
         xposbefore = self.sim.data.qpos[0]
