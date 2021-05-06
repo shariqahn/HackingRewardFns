@@ -6,11 +6,14 @@ import numpy as np
 from environment import Environment
 from pybulletgym.envs.mujoco.envs.locomotion.half_cheetah_env import HalfCheetahMuJoCoEnv
 
+import imageio
+
 class HalfCheetah(Environment, HalfCheetahMuJoCoEnv):
     def __init__(self):
         HalfCheetahMuJoCoEnv.__init__(self)
 
         self.possible_targets = (-1.0, 1.0)
+        self.target = 1.0
         # self.state = [0, 0] # need to change
         # self.done = False
         # self.action_space = spaces.Discrete(2) # need to change
@@ -24,6 +27,7 @@ class HalfCheetah(Environment, HalfCheetahMuJoCoEnv):
 
     def randomize_rewards(self, rng):
         self.target = rng.choice(self.possible_targets)
+        # self.target = 1.0
         self.reward_function = self.get_reward
 
     def get_reward(self, state, action, next_state, target=False):
@@ -68,3 +72,35 @@ class HalfCheetah(Environment, HalfCheetahMuJoCoEnv):
         self.randomize_rewards(rng)
 
         return HalfCheetahMuJoCoEnv.reset(self)
+
+    # def reset(self):
+    #     return HalfCheetahMuJoCoEnv.reset(self)
+
+if __name__ == '__main__':
+    env = HalfCheetah()
+    rng = np.random.RandomState(0)
+    state = env.reset(rng)
+    # action = env.action_space.sample()
+    action = rng.rand(6)
+    next_state, _, _, _ = env.step(action)
+    print(state, action, next_state)
+
+    # s = np.zeros(17)
+    # s[0] = -.056
+    # print(s.shape == state.shape)
+    # a = 
+
+    # print(env.observation_space.shape)
+    # imgs = []
+    # for i in range(100):
+    #     obs,_,_,_ = env.step(env.action_space.sample())
+    #     # aug = (np.append(obs, 150))
+    #     # print(aug)
+    #     # print('len', (aug.shape))
+    #     image = env.render(mode='rgb_array')
+    #     imgs.append(image)
+
+    # imageio.mimsave('video.mp4', imgs)
+
+
+    

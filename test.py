@@ -6,20 +6,24 @@ import torch
 import pickle
 
 from cheetah import HalfCheetah
+from mountain_car import ContinuousMountainCarPopulationEnv
 
 from approaches.random_policy import RandomPolicyApproach
 from approaches.q_learning import SingleTaskQLearningApproach, MultiTaskQLearningApproach, SingleTaskAugmentedQLearningApproach, MultiTaskAugmentedQLearningApproach
 from approaches.dqn import MultiTaskAugmentedOracle, SingleTaskDQN, MultiTaskDQN, SingleTaskAugmentedDQN, MultiTaskAugmentedDQN, MultiTaskDQNOneQuery, MultiTaskDQNTwoQuery
-from approaches.ddpg import SingleTaskDDPG
+from approaches.ddpg import SingleTaskDDPG, MultiTaskDDPG, MultiTaskDDPGAugmentedOracle, MultiTaskDDPGQuery
 
-num_tasks = 600
+num_tasks = 35
+overall_steps = 4000*num_tasks
 eval_interval = 10
+num_seeds = 5
+seed_index = 0
 def test_single_approach(approach, rng, total_num_tasks=num_tasks):
     results = []
     # task = gym.make('foo-v0')
     # task = gym.make('slider-v0')
-    # task = HalfCheetah()
-    task = gym.make('MountainCarContinuous-v0')
+    task = HalfCheetah()
+    # task = ContinuousMountainCarPopulationEnv()
     approach = approach(task.action_space, task.observation_space, rng)
 
     results = run_approach_on_task(approach, task, rng, num_tasks=total_num_tasks)
@@ -40,8 +44,10 @@ def run_approach_on_task(approach, task, rng, num_tasks):
     targets = [task.target]
     eval_results = [] # no e-greedy
     step_count = 0
-    num_steps = 25
-    while len(results) < num_tasks:
+    max_steps = 1000
+    overall_step_count = 0
+    while overall_step_count < overall_steps:
+    # while len(results) < num_tasks:
         if len(results) % eval_interval == 0:
             action = approach.get_action(state, True)
         else:
@@ -49,15 +55,16 @@ def run_approach_on_task(approach, task, rng, num_tasks):
         actions.append(action)
         next_state, reward, done, _ = task.step(action)
         step_count += 1
-        if not done:
-            done = step_count == num_steps
+        overall_step_count += 1
         result.append(reward)
         # all_states.append(next_state)
         # Tell the approach about the transition (for learning)
         approach.observe(state, action, next_state, reward, done)
+        if not done:
+            done = step_count == max_steps
+        
         state = next_state
         if done:
-            # break
             state = task.reset(rng)
             approach.reset(task.reward_function)
             targets.append(task.target)
@@ -67,18 +74,14 @@ def run_approach_on_task(approach, task, rng, num_tasks):
             # count += 1
             if len(results) % eval_interval == 0:
                 eval_results.append(result)
-                diff = 0
-                if (actions[0] == 0 and task.target <= 0) or (actions[0] == 1 and task.target >= 0):
-                    diff += 1
-                consistent = 0
-                for a in actions:
-                    if a == actions[0]:
-                        consistent += 1
-                diff += consistent/len(actions)
-                differences.append(diff)
 
-            if len(results) % 10*eval_interval == 0:
-                print(f"Finished trial {len(results)}/{num_tasks} with returns {sum(result):6.0f}", end='\r')
+            if (overall_step_count%4000 == 0) and (seed_index == (num_seeds - 1)):
+                approach.log(result, task)
+
+            if len(results) % (eval_interval) == 0:
+                # print(result)
+                # print(f"Finished trial {len(results)}/{num_tasks} with returns {sum(result)}", end='\r')
+                print(f"Finished trial {len(results)} ({overall_step_count} steps) with returns {sum(result)}", end='\r')
             results.append(result)
 
             result = []
@@ -91,7 +94,10 @@ def run_approach_on_task(approach, task, rng, num_tasks):
 
 if __name__ == "__main__":
     for approach in (
-        'SingleTaskDDPG',
+        # 'SingleTaskDDPG',
+        'MultiTaskDDPG',
+        'MultiTaskDDPGAugmentedOracle',
+        'MultiTaskDDPGQuery',
         # 'MultiTaskAugmentedOracle',
         # 'MultiTaskDQNOneQuery',
         # 'MultiTaskDQNTwoQuery',
@@ -139,22 +145,31 @@ if __name__ == "__main__":
         elif approach == 'SingleTaskDDPG':
             approach_fn = SingleTaskDDPG
             file += 'SingleTaskDDPG.pkl'
+        elif approach == 'MultiTaskDDPG':
+            approach_fn = MultiTaskDDPG
+            file += 'MultiTaskDDPG.pkl'
+        elif approach == 'MultiTaskDDPGAugmentedOracle':
+            approach_fn = MultiTaskDDPGAugmentedOracle
+            file += 'MultiTaskDDPGAugmentedOracle.pkl'
+        elif approach == 'MultiTaskDDPGQuery':
+            approach_fn = MultiTaskDDPGQuery
+            file += 'MultiTaskDDPGQuery.pkl'
 
-        final_num_tasks = num_tasks//eval_interval
+        final_num_tasks = overall_steps//1000//eval_interval
         results = [0]*final_num_tasks
         # goals = [0]*final_num_tasks 
         
         # state_visits = np.zeros((4, 4))
-        num_seeds = 25
         for i in range(num_seeds):
             print(f"*** STARTING SEED {i} for approach {approach} ***")
-            if i == 0:
-                difference = [0]*final_num_tasks #difference bw returns and target velocities
-
+            # if i == 0:
+            #     difference = [0]*final_num_tasks #difference bw returns and target velocities
+            seed_index = i
             rng = np.random.RandomState(i)
             torch.manual_seed(i)
             
-            rewards, scores, targets = (test_single_approach(approach_fn, rng))
+            rewards, scores, targets = test_single_approach(approach_fn, rng)
+            print(final_num_tasks == len(rewards))
 
             for j in range(final_num_tasks):
                 episode_return = sum(rewards[j])

@@ -57,10 +57,10 @@ class ContinuousMountainCarPopulationEnv(Environment):
 
     def randomize_rewards(self, rng):
         # Select one of two possible goal positions
-        if rng.choice(2):
-            self.target = np.array([0.9])
-        else:
-            self.target = np.array([0.1])
+        # if rng.choice(2):
+        self.target = np.array([0.9])
+        # else:
+        #     self.target = np.array([0.1])
 
     def get_reward(self, state, action, next_state, target=False):
         if target:
@@ -76,8 +76,9 @@ class ContinuousMountainCarPopulationEnv(Environment):
             assert np.sum(switched_side) <= 1
             reward += np.sum(self.goal_reward[switched_side])
             vel_cost = self.vel_penalty * abs(velocity) / self.max_speed
-            reward -= 100.0 * vel_cost
-        reward -= math.pow(action[0], 2) * 0.1
+            # reward -= 100.0 * vel_cost
+        # reward -= math.pow(action[0], 2) * 0.1
+        reward -= (self.target - position)**2
         return reward
 
     def step(self, action):
@@ -111,8 +112,9 @@ class ContinuousMountainCarPopulationEnv(Environment):
             assert np.sum(switched_side) <= 1
             reward += np.sum(self.goal_reward[switched_side])
             vel_cost = self.vel_penalty * abs(velocity) / self.max_speed
-            reward -= 100.0 * vel_cost
-        reward -= math.pow(action[0], 2) * 0.1
+            # reward -= 100.0 * vel_cost
+        # reward -= math.pow(action[0], 2) * 0.1
+        reward -= (self.target - position)**2
 
         if self.target is not None:
             self.state = np.array([position, velocity])

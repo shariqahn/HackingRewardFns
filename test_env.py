@@ -52,3 +52,8 @@ print(env.observation_space)
 #     if done:
 #         print("Random: Reward at Termination: {}".format(r))
 #         break
+
+images = []
+im = task.render(mode='rgb_array')
+images.append(im)
+imageio.mimsave(images, [path to file])
