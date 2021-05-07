@@ -16,10 +16,10 @@ from spinup.utils.run_utils import setup_logger_kwargs
 
 from gym import spaces #fix
 
+import imageio
 
 
 class MLPActorCritic(nn.Module):
-
     def __init__(self, obs_dim, action_space, hidden_sizes=(256,256),
                  activation=nn.ReLU):
         super().__init__()
@@ -30,7 +30,7 @@ class MLPActorCritic(nn.Module):
 
         # build policy and value functions
         self.pi = MLPActor(obs_dim, act_dim, hidden_sizes, activation, act_limit)
-        self.q = MLPQFunction(obs_dim, act_dim, hidden_sizes, activation)
+        self.q = MLPQFunction(obs_dim, act_dim, hidden_sizes, activation) #never used?
 
     def act(self, obs):
         with torch.no_grad():
@@ -73,6 +73,7 @@ class SingleTaskDDPG(Approach):
         self.act_limit = self.action_space.high[0]
 
         self.net = False
+
 
     def init_net(self, state):
         self.obs_dim = state.shape
@@ -197,6 +198,37 @@ class SingleTaskDDPG(Approach):
         self.logger.log_tabular('LossQ', average_only=True)
         self.logger.dump_tabular()
 
+    def load(self, file, task):
+        # model = torch.load(file)
+        # s = ()
+        # for param_tensor in model.state_dict():
+        #     s+=(param_tensor, "\t", model.state_dict()[param_tensor].size())
+        # return s
+        # model = self.actor_critic(17, self.action_space)
+        # model.load_state_dict(torch.load(file))
+        self.ac = torch.load(file)
+        self.ac.eval()
+        self.net = True
+
+        state = task.reset(self.rng)
+        self.reward_function = task.reward_function
+        images = []
+        returns = 0
+        for i in range(1000):
+            action = self.get_action(state, True)
+            print('s', state)
+            print(action)
+            state, reward, done, _ = task.step(action)
+            returns += reward
+            print('r', reward)
+            im = task.render(mode='rgb_array')
+            images.append(im)
+
+            if done:
+                break
+        imageio.mimsave('oracle.mp4', images)
+        print('return', returns)
+
 
 class MultiTaskDDPG(SingleTaskDDPG):
     def __init__(self, *args, **kwargs):
@@ -243,7 +275,7 @@ class MultiTaskDDPGQuery(MultiTaskDDPG):
 class MultiTaskDDPGAutoQuery(MultiTaskDDPG):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        logger_kwargs = setup_logger_kwargs('MultiTaskDDPGQuery')
+        logger_kwargs = setup_logger_kwargs('MultiTaskDDPGAutoQuery')
         self.logger = EpochLogger(**logger_kwargs)
         self.logger.save_config(globals())
 

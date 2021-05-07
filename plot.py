@@ -10,7 +10,8 @@ from test import num_tasks, eval_interval
 for approach in (
     # 'SingleTaskDDPG',
     'MultiTaskDDPG',
-    # 'MultiTaskDDPGAugmentedOracle',
+    'MultiTaskDDPGAugmentedOracle',
+    'MultiTaskDDPGQuery',
     # 'MultiTaskAugmentedOracle',
     # 'MultiTaskDQNOneQuery',
     # 'MultiTaskDQNTwoQuery',
@@ -48,17 +49,15 @@ for approach in (
         file = 'MultiTaskDDPG.pkl'
     elif approach == 'MultiTaskDDPGAugmentedOracle':
         file = 'MultiTaskDDPGAugmentedOracle.pkl'
+    elif approach == 'MultiTaskDDPGQuery':
+        file = 'MultiTaskDDPGQuery.pkl'
 
     rewards, scores, targets, results = pickle.load(open('results/'+file,'rb'))
-    # num_eval_tasks = num_tasks//10
     num_eval_tasks = len(rewards)
     save_to = 'figures/DDPG/' + file[:-4] + '.png'
     
     # Data for plotting
     # x = eval_interval*np.arange(num_eval_tasks)
-    results = []
-    for r in rewards:
-        results.append(sum(r))
     x = eval_interval*np.arange(len(results))
     fig, ax = plt.subplots()
     ax.plot(x,results)
