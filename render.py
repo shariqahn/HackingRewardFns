@@ -6,11 +6,13 @@ from approaches.ddpg import SingleTaskDDPG, MultiTaskDDPG, MultiTaskDDPGAugmente
 
 
 if __name__ == '__main__':
-    task = HalfCheetah()
+    task = HalfCheetah(render=True)
     rng = np.random.RandomState(2)
     task.reset(rng)
+
     approach = MultiTaskDDPGAugmentedOracle(task.action_space, task.observation_space, rng)
     approach.reset(task.reward_function)
+    approach.start_steps = 0
 
     # model = torch.load('/Users/shariqah/spinningup/data/MultiTaskDDPG/pyt_save/model.pt')
     # for param_tensor in model.state_dict():

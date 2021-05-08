@@ -9,8 +9,8 @@ from pybulletgym.envs.mujoco.envs.locomotion.half_cheetah_env import HalfCheetah
 import imageio
 
 class HalfCheetah(Environment, HalfCheetahMuJoCoEnv):
-    def __init__(self):
-        HalfCheetahMuJoCoEnv.__init__(self)
+    def __init__(self, render=False):
+        HalfCheetahMuJoCoEnv.__init__(self, render=render)
 
         self.possible_targets = (-1.0, 1.0)
         self.target = 1.0
