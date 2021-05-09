@@ -208,26 +208,21 @@ class SingleTaskDDPG(Approach):
         # model.load_state_dict(torch.load(file))
         self.ac = torch.load(file)
         self.ac.eval()
-        self.net = True
 
+        self.net = True
         state = task.reset(self.rng)
         self.reward_function = task.reward_function
         images = []
-        returns = 0
-        for i in range(1000):
+        
+        for i in range(100):
             action = self.get_action(state, True)
-            print('s', state)
-            print(action)
             state, reward, done, _ = task.step(action)
-            returns += reward
-            print('r', reward)
             im = task.render(mode='rgb_array')
             images.append(im)
 
             if done:
                 break
-        imageio.mimsave('oracle.mp4', images)
-        print('return', returns)
+        imageio.mimsave('figures/DDPG/oracle.mp4', images)
 
 
 class MultiTaskDDPG(SingleTaskDDPG):
