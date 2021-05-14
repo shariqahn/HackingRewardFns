@@ -13,7 +13,7 @@ from approaches.q_learning import SingleTaskQLearningApproach, MultiTaskQLearnin
 from approaches.dqn import MultiTaskAugmentedOracle, SingleTaskDQN, MultiTaskDQN, SingleTaskAugmentedDQN, MultiTaskAugmentedDQN, MultiTaskDQNOneQuery, MultiTaskDQNTwoQuery
 from approaches.ddpg import SingleTaskDDPG, MultiTaskDDPG, MultiTaskDDPGAugmentedOracle, MultiTaskDDPGQuery, MultiTaskDDPGAutoQuery
 
-num_tasks = 35
+num_tasks = 50
 overall_steps = 4000*num_tasks
 eval_interval = 10
 num_seeds = 5
@@ -187,7 +187,7 @@ if __name__ == "__main__":
             targets.append(current_targets)
 
             for j in range(final_num_tasks):
-                episode_return = sum(rewards[j])
+                episode_return = sum(current_returns[j])
                 results[j] += episode_return/num_seeds
 
                 # goals[j] += current[j][1]/25.0

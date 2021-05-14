@@ -9,10 +9,11 @@ from test import num_tasks, eval_interval
 # print(pickle.load(open("sample.pkl",'rb')))
 for approach in (
     # 'SingleTaskDDPG',
-    'MultiTaskDDPG',
+    # 'MultiTaskDDPG',
     'MultiTaskDDPGAugmentedOracle',
     'MultiTaskDDPGQuery',
-    # 'MultiTaskAugmentedOracle',
+    'MultiTaskDDPGAutoQuery',
+    'MultiTaskAugmentedOracle',
     # 'MultiTaskDQNOneQuery',
     # 'MultiTaskDQNTwoQuery',
     # 'MultiTaskDQN'
@@ -51,23 +52,46 @@ for approach in (
         file = 'MultiTaskDDPGAugmentedOracle.pkl'
     elif approach == 'MultiTaskDDPGQuery':
         file = 'MultiTaskDDPGQuery.pkl'
+    elif approach == 'MultiTaskDDPGAutoQuery':
+        file = 'MultiTaskDDPGAutoQuery.pkl'
 
-    rewards, scores, targets, results = pickle.load(open('results/'+file,'rb'))
+    rewards, positions, targets, results = pickle.load(open('results/'+file,'rb'))
     num_eval_tasks = len(rewards)
     save_to = 'figures/DDPG/' + file[:-4] + '.png'
     
     # Data for plotting
     # x = eval_interval*np.arange(num_eval_tasks)
-    x = eval_interval*np.arange(len(results))
+
+    # TODO: add error bars!!!
+    # x = eval_interval*np.arange(len(results))
+    # fig, ax = plt.subplots()
+    # ax.plot(x,results)
+
+    # ax.set(xlabel='Number of Episodes', ylabel='Return',
+    #        title=approach)
+    # # ax.set_ylim(ymax=0, ymin=-1e4)
+    # ax.grid()
+
+    # fig.savefig(save_to)
+
+
+    # plots states across last 2 episodes for each seed in separate line
     fig, ax = plt.subplots()
-    ax.plot(x,results)
-
-    ax.set(xlabel='Number of Episodes', ylabel='Return',
+    seed = 0
+    for i in range(len(positions[seed])):
+        episode = positions[seed][i]
+        # print(targets[i])
+        if targets[seed][i] == 1.0:
+            ax.plot(range(len(episode)), episode, label='direction = right', color='b')
+        else:
+            ax.plot(range(len(episode)), episode, label='direction = left', color='r')
+    ax.set(xlabel='Number of Steps', ylabel='Position',
            title=approach)
-    # ax.set_ylim(ymax=0, ymin=-1e4)
+    # ax.set_ylim(ymax=3750, ymin=-1000)
     ax.grid()
+    # ax.legend()
 
-    fig.savefig(save_to)
+    fig.savefig(save_to[:-4] + '_episodes.png')
 
     # plot with max return reference line
     # plt.clf()
