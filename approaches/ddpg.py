@@ -96,7 +96,6 @@ class SingleTaskDDPG(Approach):
         self.net = True
 
     def observe(self, state, action, next_state, reward, done):
-        # use this transition to augment state properly - only the ifrst time
         state = self.process_state(state)
         next_state = self.process_state(next_state)
 
@@ -164,7 +163,6 @@ class SingleTaskDDPG(Approach):
                 p_targ.data.add_((1 - self.polyak) * p.data)
 
     def get_action(self, state, exploit=False):
-        # for first call, will add random junk to processed state bc no transition yet
         processed_state = self.process_state(state)
         if not self.net:
             self.init_net(processed_state)
@@ -273,13 +271,44 @@ class MultiTaskDDPGAutoQuery(MultiTaskDDPG):
         logger_kwargs = setup_logger_kwargs('MultiTaskDDPGAutoQuery')
         self.logger = EpochLogger(**logger_kwargs)
         self.logger.save_config(globals())
+        self.init_query = False
+        self.query_reward = 0
+
+    def reset(self, reward_function):
+        self.reward_function = reward_function
+        self.init_query = False
+        self.query_reward = 0
+
+    def observe(self, state, action, next_state, reward, done):
+        # use this transition to augment state properly - only the ifrst time
+        if not self.init_query:
+            self.query_reward = self.reward_function(state, action, next_state) 
+            self.init_query = True
+
+        state = self.process_state(state)
+        next_state = self.process_state(next_state)
+
+        self.replay_buffer.store(state, action, reward, next_state, done)
+        if self.step_count >= self.update_after and self.step_count % self.update_every == 0:
+            for _ in range(self.update_every):
+                batch = self.replay_buffer.sample_batch(self.batch_size)
+                self.update(data=batch)
+
+    def get_action(self, state, exploit=False):
+        # for first call, will add random junk to processed state bc no transition yet
+        processed_state = self.process_state(state)
+        if not self.net:
+            self.init_net(processed_state)
+
+        # state is actually observation
+        self.step_count += 1
+        if self.step_count <= self.start_steps:
+            return self.action_space.sample()
+
+        a = self.ac.act(torch.as_tensor(processed_state, dtype=torch.float32))
+        if not exploit:
+            a += self.act_noise * np.random.randn(self.act_dim)
+        return np.clip(a, -self.act_limit, self.act_limit)
 
     def process_state(self, state):
-        query_state = np.zeros(17)
-        query_state[0] = -.05
-        next_state = np.zeros(17)
-        next_state[0] = .007
-        action = self.rng.rand(6)
-        query = self.reward_function(query_state, action, next_state) 
-        return np.append(state, query)
-
+        return np.append(state, self.query_reward)

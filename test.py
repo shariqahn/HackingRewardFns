@@ -11,7 +11,7 @@ from mountain_car import ContinuousMountainCarPopulationEnv
 from approaches.random_policy import RandomPolicyApproach
 from approaches.q_learning import SingleTaskQLearningApproach, MultiTaskQLearningApproach, SingleTaskAugmentedQLearningApproach, MultiTaskAugmentedQLearningApproach
 from approaches.dqn import MultiTaskAugmentedOracle, SingleTaskDQN, MultiTaskDQN, SingleTaskAugmentedDQN, MultiTaskAugmentedDQN, MultiTaskDQNOneQuery, MultiTaskDQNTwoQuery
-from approaches.ddpg import SingleTaskDDPG, MultiTaskDDPG, MultiTaskDDPGAugmentedOracle, MultiTaskDDPGQuery
+from approaches.ddpg import SingleTaskDDPG, MultiTaskDDPG, MultiTaskDDPGAugmentedOracle, MultiTaskDDPGQuery, MultiTaskDDPGAutoQuery
 
 num_tasks = 35
 overall_steps = 4000*num_tasks
@@ -40,8 +40,9 @@ def run_approach_on_task(approach, task, rng, num_tasks):
     # A list of all the states ever visited
     # all_states = [state]
     results = [] # includes e-greedy results
-    differences = []
-    targets = [task.target]
+    targets = []
+    positions = []
+    current_positions = []
     eval_results = [] # no e-greedy
     step_count = 0
     max_steps = 1000
@@ -49,6 +50,7 @@ def run_approach_on_task(approach, task, rng, num_tasks):
     while overall_step_count < overall_steps:
     # while len(results) < num_tasks:
         if len(results) % eval_interval == 0:
+            current_positions.append(state[0])
             action = approach.get_action(state, True)
         else:
             action = approach.get_action(state)
@@ -65,15 +67,19 @@ def run_approach_on_task(approach, task, rng, num_tasks):
         
         state = next_state
         if done:
-            state = task.reset(rng)
-            approach.reset(task.reward_function)
-            targets.append(task.target)
-            step_count = 0
-            # reset environment without rerandomizing
-            # allows agent to learn for longer
-            # count += 1
             if len(results) % eval_interval == 0:
                 eval_results.append(result)
+                positions.append(current_positions)
+                current_positions = []
+                targets.append(task.target)
+
+            # reset environment without rerandomizing
+            # allows agent to learn for longer
+            state = task.reset(rng)
+            approach.reset(task.reward_function)
+            step_count = 0
+            # count += 1
+            
 
             if (overall_step_count%4000 == 0) and (seed_index == (num_seeds - 1)):
                 approach.log(result, task)
@@ -87,7 +93,7 @@ def run_approach_on_task(approach, task, rng, num_tasks):
             result = []
             actions = []
     print()
-    return eval_results, differences, targets[:-1]
+    return eval_results, positions, targets
     # , count
     # , all_states
 
@@ -98,6 +104,7 @@ if __name__ == "__main__":
         'MultiTaskDDPG',
         'MultiTaskDDPGAugmentedOracle',
         'MultiTaskDDPGQuery',
+        'MultiTaskDDPGAutoQuery',
         # 'MultiTaskAugmentedOracle',
         # 'MultiTaskDQNOneQuery',
         # 'MultiTaskDQNTwoQuery',
@@ -154,10 +161,16 @@ if __name__ == "__main__":
         elif approach == 'MultiTaskDDPGQuery':
             approach_fn = MultiTaskDDPGQuery
             file += 'MultiTaskDDPGQuery.pkl'
+        elif approach == 'MultiTaskDDPGAutoQuery':
+            approach_fn = MultiTaskDDPGAutoQuery
+            file += 'MultiTaskDDPGAutoQuery.pkl'
 
         final_num_tasks = overall_steps//1000//eval_interval
         results = [0]*final_num_tasks
         # goals = [0]*final_num_tasks 
+        rewards = []
+        positions = []
+        targets = []
         
         # state_visits = np.zeros((4, 4))
         for i in range(num_seeds):
@@ -168,8 +181,10 @@ if __name__ == "__main__":
             rng = np.random.RandomState(i)
             torch.manual_seed(i)
             
-            rewards, scores, targets = test_single_approach(approach_fn, rng)
-            print(final_num_tasks == len(rewards))
+            current_returns, current_positions, current_targets = test_single_approach(approach_fn, rng)
+            rewards.append(current_returns)
+            positions.append(current_positions)
+            targets.append(current_targets)
 
             for j in range(final_num_tasks):
                 episode_return = sum(rewards[j])
@@ -180,5 +195,5 @@ if __name__ == "__main__":
                 #     r, c = eval(s)
                 #     state_visits[r, c] += 1./25.0
 
-        pickle.dump([rewards, scores, targets, results], open(file, "wb"))
+        pickle.dump([rewards, positions, targets, results], open(file, "wb"))
 
