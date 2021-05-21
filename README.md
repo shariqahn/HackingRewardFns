@@ -3,7 +3,6 @@
 ## Replicating the Experiments
 
 ### Dependencies
-
 All experiments were conducted using OpenAI's gym library. In addition, he continuous state and action experiement builds off of the pybullet implementation of HalfCheetah and spinning up implementation of DDPG. Both libraries must be installed in order to run this experiment.
 
 ### Grid World Experiment
@@ -13,23 +12,19 @@ All experiments were conducted using OpenAI's gym library. In addition, he conti
 ### HalfCheetah Experiment
 
 ## Introduction
-
 This meta-reinforcement learning project aims to improve the process of providing an agent a concrete problem specification and allowing the agent to learn the best policy for behaving in a given environment. An investigation is performed on how giving an agent access to the reward function for a Markov Decision Process will affect its ability to find an optimal policy in its environment. It builds on works such as “Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks” [1] and “Transfer in Variable-Reward Hierarchical Reinforcement Learning” [2]. A variety of environments is used, ranging from one with discrete states and actions to one with continuous states and actions.
 
 ## Background
-
 A Markov Decision Process (MDP) stores information about the states, actions, a transition function, and reward function for a given environment. The ultimate goal for an agent in an MDP is to find its optimal policy. The optimal policy would be the policy that maximizes the agents total cumulative reward, or return, after a given episode in the environment. 
 
 In normal reinforcement learning, the agent is learning about a single environment and is attempting to find an optimal policy to traverse that environment. Meta-reinforcement learning introduces the agent to multiple environments that are structurally similar. Existing algorithms are able to train a model that can solve new tasks based on a small number of samples [1]. The agent can improve its ability to find an optimal policy in later environments that it explores because it already knows how to solve a similar problem. There has also been research that is able to perform meta-reinforcement learning on environments that have the same transition functions but variable reward functions [2], which inspired the structure of the grid MDPs in this research. Note that in any Markov Decision Process, the agent must explore its environment and record the rewards that it earns in order to learn information about the reward function. However, in many reinforcement learning problems, the programmer defines the reward function but does not offer that information to the agent.
 
 ## Problem Setting
-
 This investigation assumes that the problem involves multiple Markov Decision Processes that are similar in structure. The agent is presented with one MDP at a time. Once an episode in its current MDP is completed, the agent will begin a new episode with a new MDP. The reward function is defined by the programmer in these problems, making it possible to provide this information to the agent. For example, the grid environment used in this study has a set of states and actions that are consistent in each MDP in the problem. The only thing that differs are the rewards associated with each type of space in the grid. The agent does not have direct access to the transition function, as is the convention in reinforcement learning. Additionally, the environment is fully observable. In the grid world specifically, the agent has access to the full map of the environment and its position in the map at all times. The objective of this problem is to maximize the agent’s returns after completing a number of MDPs.
 
 A key component of this investigation is that the agent is given advanced information about its environment by having access to the reward function throughout its learning process. Rewards are always stored in the state of the agent such that the information is easily accessible throughout an episode. The goal of this is to make it so the agent does not have to wait until it explores its environment to gain an understanding of the rewards associated with certain states and actions, which may inform its decisions for what actions to take.
 
 ## Experiments
-
 ### Hypothesis
 It was predicted that the ability to know the reward of moving to a given state before having to explore that state will allow the agent to take actions that will maximize its reward. A result of this advantage would be that an agent with access to the reward function would have higher returns from later tasks than an agent without this information.
 
@@ -43,7 +38,7 @@ The first baseline approach was a randomized approach, where the action chosen b
 #### Experimental Details
 For all approaches, the agent must complete 40 tasks, where each task requires the agent to learn a policy in the grid environment. The grid environment was implemented using the OpenAI Gym library in Python. After the agent finishes an episode (reaches the goal state), its state is reset to its initial state at the top-left corner of the grid, and its reward function is randomly redefined to new values. When the rewards are randomly defined, sometimes the blue spaces have a reward of -1 and the orange ones have a reward of -100, and other times to opposite is true. Reaching the goal state always gives a reward of 10. 
 
-## Results
+#### Results
 Allowing the agent to have access to the reward function had no effect on single-task reinforcement learning but made it possible for the agent to increase its returns during meta-reinforcement learning.
  
 Figure 3
@@ -63,6 +58,33 @@ Figure 6
 Figure 7
 
 The two meta-reinforcement learning algorithms differed in their policies during a given task. An analysis was performed where the agent was given 30 tasks and had to take 100 steps in the environment for each task. During these tasks, the multitask approach without access to the rewards was able to reach the goal more often than that with access to the rewards (Figure 6). This is likely due to the agent without hacking abilities not being able to effectively differentiate the two different types of spaces in the grid, as it views the negative rewards from these spaces as equally harmful despite their different values. So, the agent tries to reach the goal state as fast as possible no matter the rewards it accumulates on the way, rather than taking a more strategic route like the augmented meta-learning approach. Figure 7 is a plot of how often the agent visits a given space in the grid. So, the agent with access to the reward function sacrifices a lower number of steps in exchange for a better return.
+
+### Environment with Continuous States and Discrete Actions
+#### Environment
+The environment used for this experiment is a slider environment created in OpenAI Gym. The state stores the position and velocity of the agent, which can move either left or right. The goal is to reach the target velocity for the given task.
+
+#### Approaches
+The same approaches for the previous experiment were used for that of the slider environment. However, the approach for augmented reinforcement learn differs slightly. Here, the state was augmented with queries of the reward function rather than the entire reward function like in the grid world. An oracle approach adds the target velocity to the state to provide insight into the agent's ideal performance. Then, an approach with one query and that of two queries was created for testing how accessing the reward function affects agent performance. The agent is able to query the reward function by offering a state s, an action a, and the next state after taking action a in state s. In return, it receives the reward from that state and appends it to the agent's state.
+
+#### Experimental Details
+
+#### Results
+
+### Environment with Continuous States and Discrete Actions
+#### Environment
+This experiment uses the popular meta-reinforcement learning environment, HalfCheetah. The state keeps track of the positions and velocities of different parts of the cheetah. The actions are NO ONE KNOWS LOL. The goal in this environment is to make the cheetah move as far as possible in the target direction.
+
+#### Approaches
+The approaches for this experiment are similar to the slider experiment. However, a single task approach was not tested because it is known that a single task approach can not adapt to a new task in such a complex environment. In addition, the two query approach is not included because one query is sufficient for deducing the target direction. 
+
+#### Experimental Details
+
+
+#### Results
+
+## Conclusion
+
+In all cases, the agent was able to improve its performance by having access to the reward function.
 
 ### References
 [1] Finn, Chelsea, Abbeel Pieter, and Levine, Sergey. Model-Agnostic Meta-Learning for Fast 
