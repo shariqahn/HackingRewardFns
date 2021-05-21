@@ -272,18 +272,24 @@ class MultiTaskDDPGAutoQuery(MultiTaskDDPG):
         self.logger = EpochLogger(**logger_kwargs)
         self.logger.save_config(globals())
         self.init_query = False
+        self.init_reward = False
         self.query_reward = 0
 
     def reset(self, reward_function):
         self.reward_function = reward_function
-        self.init_query = False
+        self.init_reward = False
         self.query_reward = 0
 
     def observe(self, state, action, next_state, reward, done):
-        # use this transition to augment state properly - only the ifrst time
+        # use this transition to augment state properly - only the first time
         if not self.init_query:
-            self.query_reward = self.reward_function(state, action, next_state) 
+            self.query_state = state
+            self.query_action = action
+            self.query_next_state = next_state
             self.init_query = True
+        if not self.init_reward:
+            self.query_reward = self.reward_function(self.query_state, self.query_action, self.query_next_state) 
+            self.init_reward = True
 
         state = self.process_state(state)
         next_state = self.process_state(next_state)
@@ -296,6 +302,10 @@ class MultiTaskDDPGAutoQuery(MultiTaskDDPG):
 
     def get_action(self, state, exploit=False):
         # for first call, will add random junk to processed state bc no transition yet
+        if (self.init_query) and (not self.init_reward):
+            self.query_reward = self.reward_function(self.query_state, self.query_action, self.query_next_state) 
+            self.init_reward = True
+            
         processed_state = self.process_state(state)
         if not self.net:
             self.init_net(processed_state)

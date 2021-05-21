@@ -101,9 +101,9 @@ def run_approach_on_task(approach, task, rng, num_tasks):
 if __name__ == "__main__":
     for approach in (
         # 'SingleTaskDDPG',
-        'MultiTaskDDPG',
-        'MultiTaskDDPGAugmentedOracle',
-        'MultiTaskDDPGQuery',
+        # 'MultiTaskDDPG',
+        # 'MultiTaskDDPGAugmentedOracle',
+        # 'MultiTaskDDPGQuery',
         'MultiTaskDDPGAutoQuery',
         # 'MultiTaskAugmentedOracle',
         # 'MultiTaskDQNOneQuery',
