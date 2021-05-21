@@ -10,10 +10,10 @@ from test import num_tasks, eval_interval
 for approach in (
     # 'SingleTaskDDPG',
     # 'MultiTaskDDPG',
-    'MultiTaskDDPGAugmentedOracle',
-    'MultiTaskDDPGQuery',
+    # 'MultiTaskDDPGAugmentedOracle',
+    # 'MultiTaskDDPGQuery',
     'MultiTaskDDPGAutoQuery',
-    'MultiTaskAugmentedOracle',
+    # 'MultiTaskAugmentedOracle',
     # 'MultiTaskDQNOneQuery',
     # 'MultiTaskDQNTwoQuery',
     # 'MultiTaskDQN'
@@ -63,16 +63,16 @@ for approach in (
     # x = eval_interval*np.arange(num_eval_tasks)
 
     # TODO: add error bars!!!
-    # x = eval_interval*np.arange(len(results))
-    # fig, ax = plt.subplots()
-    # ax.plot(x,results)
+    x = eval_interval*np.arange(len(results))
+    fig, ax = plt.subplots()
+    ax.plot(x,results)
 
-    # ax.set(xlabel='Number of Episodes', ylabel='Return',
-    #        title=approach)
-    # # ax.set_ylim(ymax=0, ymin=-1e4)
-    # ax.grid()
+    ax.set(xlabel='Number of Episodes', ylabel='Return',
+           title=approach)
+    # ax.set_ylim(ymax=0, ymin=-1e4)
+    ax.grid()
 
-    # fig.savefig(save_to)
+    fig.savefig(save_to)
 
 
     # plots states across last 2 episodes for each seed in separate line
