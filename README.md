@@ -41,7 +41,7 @@ For all approaches, the agent must complete 40 tasks, where each task requires t
 #### Results
 Allowing the agent to have access to the reward function had no effect on single-task reinforcement learning but made it possible for the agent to increase its returns during meta-reinforcement learning.
  
-![Figure 2](/figures/Q-learning/random.png "Figure 2")
+![Figure 2](/figures/Q-learning/random.png =100x20 "Figure 2")
 
 The approach that gave the agent a random policy that randomly selected an action every time performed the worst (Figure 2). This is an expected result, since the agent has no strategy to improve its returns.
   
