@@ -3,13 +3,10 @@
 ## Replicating the Experiments
 
 ### Dependencies
-All experiments were conducted using OpenAI's gym library. In addition, he continuous state and action experiement builds off of the pybullet implementation of HalfCheetah and spinning up implementation of DDPG. Both libraries must be installed in order to run this experiment.
+All experiments were conducted using OpenAI's gym library. In addition, the continuous state and action experiment builds off of the PyBullet Gymperium implementation of HalfCheetah and OpenAI Spinning Up implementation of DDPG. Both libraries must be installed in order to run this experiment.
 
-### Grid World Experiment
-
-### Slider Experiment
-
-### HalfCheetah Experiment
+### Running Experiments
+Each of the three experiments has a corresponding test file (test_grid.py, test_slider.py, test_cheetah.py). These can be run to generate and store results from the experiments. This data can then be plotted using plot.py (note that you will have to comment/uncomment different plot code depending on the experiment and what plots you are hoping to create).
 
 ## Introduction
 This meta-reinforcement learning project aims to improve the process of providing an agent a concrete problem specification and allowing the agent to learn the best policy for behaving in a given environment. An investigation is performed on how giving an agent access to the reward function for a Markov Decision Process will affect its ability to find an optimal policy in its environment. It builds on works such as “Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks” [1] and “Transfer in Variable-Reward Hierarchical Reinforcement Learning” [2]. A variety of environments is used, ranging from one with discrete states and actions to one with continuous states and actions.
@@ -30,7 +27,10 @@ It was predicted that the ability to know the reward of moving to a given state 
 
 ### Environment with Discrete States and Actions
 #### Environment
-In this environment, the agent’s state is defined as the coordinates of its position in the grid environment. From any space in the grid, the agent can move right, left, up, and down to an adjacent space in the grid. If the current space in which the agent is located is at the edge of the grid, and the agent aims to move in a direction where there are no longer spaces, the agent will wrap around to the space that is on the opposite edge of the grid (Figure 2). 
+
+![Figure 1](/figures/grid.png "Figure 1")
+
+In this environment, the agent’s state is defined as the coordinates of its position in the grid environment. From any space in the grid, the agent can move right, left, up, and down to an adjacent space in the grid. If the current space in which the agent is located is at the edge of the grid, and the agent aims to move in a direction where there are no longer spaces, the agent will wrap around to the space that is on the opposite edge of the grid (Figure 1). 
 
 #### Approaches
 The first baseline approach was a randomized approach, where the action chosen by the agent was randomly chosen from one of the possible choices. Baseline Q-learning algorithms were also implemented for both reinforcement learning and meta-reinforcement learning. The difference between these two approaches is that regular reinforcement learning resets the Q-function after each episode, while meta-reinforcement learning does not. Augmented reinforcement learning and augmented meta-reinforcement learning approaches were also created in order to handle states that included information about the reward function. A mapping of coordinates on the grid to reward values was appended to the end of the existing state, which contained the coordinates of the current location of the agent. This new state was used in these augmented approaches so that the agent can take advantage of this extra information.  
@@ -41,36 +41,52 @@ For all approaches, the agent must complete 40 tasks, where each task requires t
 #### Results
 Allowing the agent to have access to the reward function had no effect on single-task reinforcement learning but made it possible for the agent to increase its returns during meta-reinforcement learning.
  
-Figure 3
+![Figure 2](/figures/Q-learning/random.png "Figure 2")
 
-The approach that gave the agent a random policy that randomly selected an action every time performed the worst (Figure 3). This is an expected result, since the agent has no strategy to improve its returns.
+The approach that gave the agent a random policy that randomly selected an action every time performed the worst (Figure 2). This is an expected result, since the agent has no strategy to improve its returns.
   
-Figure 4
+![Figure 3](/figures/Q-learning/single_task.png "Figure 3")
+![Figure 3](/figures/Q-learning/single_task_augmented.png "Figure 3")
 
-The single task, regular reinforcement learning algorithms performed slightly better than the random policy (Figure 4). There is likely no upward trend as the number of completed episodes increases because this algorithm tackles each new task as if it has no prior knowledge about similar tasks. However, there is some learning that occurs during a single episode, hence the improvement in returns in comparison to the random policy. There is no difference between the single task algorithm with hacking the reward function and that without because within a single episode, the reward function information in the state never changes. So, the agent is not able to learn anything from this information. 
+The single task, regular reinforcement learning algorithms performed slightly better than the random policy (Figure 3). There is likely no upward trend as the number of completed episodes increases because this algorithm tackles each new task as if it has no prior knowledge about similar tasks. However, there is some learning that occurs during a single episode, hence the improvement in returns in comparison to the random policy. There is no difference between the single task algorithm with hacking the reward function and that without because within a single episode, the reward function information in the state never changes. So, the agent is not able to learn anything from this information. 
   
-Figure 5
+![Figure 4](/figures/Q-learning/multitask.png "Figure 4")
+![Figure 4](/figures/Q-learning/multitask_augmented.png "Figure 4")
 
-The meta-reinforcement learning algorithms performed the best overall. Its returns increase as the agent completes more tasks because the agent can use its prior knowledge about the environment to help create a good policy for newer tasks. The meta-learning approach with access to the reward function follows a similar trend, but with higher returns (Figure 5). This is evidence that allowing the agent to have access to the reward function allows it to deduce information about its environment before taking any actions and develop a better policy.
+The meta-reinforcement learning algorithms performed the best overall. Its returns increase as the agent completes more tasks because the agent can use its prior knowledge about the environment to help create a good policy for newer tasks. The meta-learning approach with access to the reward function follows a similar trend, but with higher returns (Figure 4). This is evidence that allowing the agent to have access to the reward function allows it to deduce information about its environment before taking any actions and develop a better policy.
   
-Figure 6
-  
-Figure 7
+![Figure 5](/figures/Q-learning/multitask_goals.png "Figure 5")
+![Figure 5](/figures/Q-learning/multitask_augmented_goals.png "Figure 5")
 
-The two meta-reinforcement learning algorithms differed in their policies during a given task. An analysis was performed where the agent was given 30 tasks and had to take 100 steps in the environment for each task. During these tasks, the multitask approach without access to the rewards was able to reach the goal more often than that with access to the rewards (Figure 6). This is likely due to the agent without hacking abilities not being able to effectively differentiate the two different types of spaces in the grid, as it views the negative rewards from these spaces as equally harmful despite their different values. So, the agent tries to reach the goal state as fast as possible no matter the rewards it accumulates on the way, rather than taking a more strategic route like the augmented meta-learning approach. Figure 7 is a plot of how often the agent visits a given space in the grid. So, the agent with access to the reward function sacrifices a lower number of steps in exchange for a better return.
+![Figure 6](/figures/Q-learning/multitask_state_visits.png "Figure 6")
+![Figure 6](/figures/Q-learning/multitask_augmented_state_visits.png "Figure 6")
+
+The two meta-reinforcement learning algorithms differed in their policies during a given task. An analysis was performed where the agent was given 30 tasks and had to take 100 steps in the environment for each task. During these tasks, the multitask approach without access to the rewards was able to reach the goal more often than that with access to the rewards (Figure 5). This is likely due to the agent without hacking abilities not being able to effectively differentiate the two different types of spaces in the grid, as it views the negative rewards from these spaces as equally harmful despite their different values. So, the agent tries to reach the goal state as fast as possible no matter the rewards it accumulates on the way, rather than taking a more strategic route like the augmented meta-learning approach. Figure 6 is a plot of how often the agent visits a given space in the grid. So, the agent with access to the reward function sacrifices a lower number of steps in exchange for a better return.
 
 ### Environment with Continuous States and Discrete Actions
 #### Environment
 The environment used for this experiment is a slider environment created in OpenAI Gym. The state stores the position and velocity of the agent, which can move either left or right. The goal is to reach the target velocity for the given task.
 
 #### Approaches
-The same approaches for the previous experiment were used for that of the slider environment. However, the approach for augmented reinforcement learn differs slightly. Here, the state was augmented with queries of the reward function rather than the entire reward function like in the grid world. An oracle approach adds the target velocity to the state to provide insight into the agent's ideal performance. Then, an approach with one query and that of two queries was created for testing how accessing the reward function affects agent performance. The agent is able to query the reward function by offering a state s, an action a, and the next state after taking action a in state s. In return, it receives the reward from that state and appends it to the agent's state.
+The same approaches for the previous experiment were used for that of the slider environment. However, the approach for augmented reinforcement learn differs slightly. Here, the state was augmented with queries of the reward function rather than the entire reward function like in the grid world. An oracle approach appends the target velocity to the state to provide insight into the agent's ideal performance. Then, an approach with one query and that of two queries was created for testing how accessing the reward function affects agent performance. The agent is able to query the reward function by offering a state s, an action a, and the next state after taking action a in state s. In return, it receives the reward from that state and appends it to the agent's state.
 
 #### Experimental Details
 The slider environment was created using OpenAI Gym. In this experiment, the agent completes 600 episodes with a maximum of 25 steps in each. Each episode is a task with a random target velocity between -10 and 10. Each approach was run with 25 seeds and those results were averaged together. 
 
 #### Results
+Similar to the grid world experiment, the single task approaches did not show any improvement as the number of episodes increased, but the multitask approaches did.
 
+singles and reg meta
+
+Regular meta-reinforcement learning achieved a maximum return of approximately -1000. The oracle approach, however, achieved returns very close to zero. This is likely because the agent knows exactly the target velocity it is trying to achieve by accessing it in its state. 
+
+one 
+
+The approach with only one query of the reward function reached returns similar to the regular meta-reinforcement approach. Since the reward function in this environment is only dependent on the current state, it is reasonable that knowing the reward based on a current position and velocity is not enough information to deduce the direction towards the target velocity.
+
+two 
+
+The two-query approach, on the other hand, reaches a similar reward close to zero to the oracle approach. This approach provides information about a complete step, so the agent is able to deduce the direction it needs to go to reach the target velocity. For example, a query with a given velocity and a query with a velocity higher than the previous will show whether increasing the velocity improves or decreases the reward. If it improves, the agent knows to continue increasing velocity until it reaches the target. If it decreases, the agent can do the opposite. With this strategy, the agent can optimize its actions and maximize rewards. 
 
 ### Environment with Continuous States and Discrete Actions
 #### Environment
@@ -103,7 +119,7 @@ This approach achieves a maximum return of about 4000. This approach is expected
 
 ## Conclusion
 
-In all cases, the agent was able to improve its performance by having access to the reward function.
+In all cases, the agent was able to improve its performance by having access to the reward function. Future investigations could expand on the automatic query process. The current process may not work in environments with more complex reward functions, such as those with sparse rewards. A more robust query process that relies less on help from a human would help make more complete this strategy of reinforcement learning.
 
 ### References
 [1] Finn, Chelsea, Abbeel Pieter, and Levine, Sergey. Model-Agnostic Meta-Learning for Fast 
