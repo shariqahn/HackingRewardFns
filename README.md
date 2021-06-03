@@ -41,28 +41,25 @@ For all approaches, the agent must complete 40 tasks, where each task requires t
 #### Results
 Allowing the agent to have access to the reward function had no effect on single-task reinforcement learning but made it possible for the agent to increase its returns during meta-reinforcement learning.
  
-<!-- ![Figure 2](/figures/Q-learning/random.png =100x20 "Figure 2") -->
 <img src="/figures/Q-learning/random.png" alt="figure" width="400"/>
 
 The approach that gave the agent a random policy that randomly selected an action every time performed the worst (Figure 2). This is an expected result, since the agent has no strategy to improve its returns.
-  
-<!-- ![Figure 3](/figures/Q-learning/single_task.png "Figure 3")
-![Figure 3](/figures/Q-learning/single_task_augmented.png "Figure 3") -->
+
 <img src="/figures/Q-learning/single_task.png" alt="figure" width="400"/>
 <img src="/figures/Q-learning/single_task_augmented.png" alt="figure" width="400"/>
 
 The single task, regular reinforcement learning algorithms performed slightly better than the random policy (Figure 3). There is likely no upward trend as the number of completed episodes increases because this algorithm tackles each new task as if it has no prior knowledge about similar tasks. However, there is some learning that occurs during a single episode, hence the improvement in returns in comparison to the random policy. There is no difference between the single task algorithm with hacking the reward function and that without because within a single episode, the reward function information in the state never changes. So, the agent is not able to learn anything from this information. 
   
-![Figure 4](/figures/Q-learning/multitask.png "Figure 4")
-![Figure 4](/figures/Q-learning/multitask_augmented.png "Figure 4")
+<img src="/figures/Q-learning/multitask.png" alt="figure" width="400"/>
+<img src="/figures/Q-learning/multitask_augmented.png" alt="figure" width="400"/>
 
 The meta-reinforcement learning algorithms performed the best overall. Its returns increase as the agent completes more tasks because the agent can use its prior knowledge about the environment to help create a good policy for newer tasks. The meta-learning approach with access to the reward function follows a similar trend, but with higher returns (Figure 4). This is evidence that allowing the agent to have access to the reward function allows it to deduce information about its environment before taking any actions and develop a better policy.
-  
-![Figure 5](/figures/Q-learning/multitask_goals.png "Figure 5")
-![Figure 5](/figures/Q-learning/multitask_augmented_goals.png "Figure 5")
 
-![Figure 6](/figures/Q-learning/multitask_state_visits.png "Figure 6")
-![Figure 6](/figures/Q-learning/multitask_augmented_state_visits.png "Figure 6")
+<img src="/figures/Q-learning/multitask_goals.png" alt="figure" width="400"/>
+<img src="/figures/Q-learning/multitask_augmented_goals.png" alt="figure" width="400"/>
+
+<img src="/figures/Q-learning/multitask_state_visits.png" alt="figure" width="400"/>
+<img src="/figures/Q-learning/multitask_augmented_state_visits.png" alt="figure" width="400"/>
 
 The two meta-reinforcement learning algorithms differed in their policies during a given task. An analysis was performed where the agent was given 30 tasks and had to take 100 steps in the environment for each task. During these tasks, the multitask approach without access to the rewards was able to reach the goal more often than that with access to the rewards (Figure 5). This is likely due to the agent without hacking abilities not being able to effectively differentiate the two different types of spaces in the grid, as it views the negative rewards from these spaces as equally harmful despite their different values. So, the agent tries to reach the goal state as fast as possible no matter the rewards it accumulates on the way, rather than taking a more strategic route like the augmented meta-learning approach. Figure 6 is a plot of how often the agent visits a given space in the grid. So, the agent with access to the reward function sacrifices a lower number of steps in exchange for a better return.
 
@@ -79,15 +76,19 @@ The slider environment was created using OpenAI Gym. In this experiment, the age
 #### Results
 Similar to the grid world experiment, the single task approaches did not show any improvement as the number of episodes increased, but the multitask approaches did.
 
-singles and reg meta
+<img src="/figures/DQN/_eval_single_dqn.png" alt="figure" width="400"/>
+<img src="/figures/DQN/_eval_single_augmented_dqn.png" alt="figure" width="400"/>
+<img src="/figures/DQN/_eval_multi_dqn.png" alt="figure" width="400"/>
+<img src="/figures/DQN/_eval_MultiTaskAugmentedOracle.png" alt="figure" width="400"/> 
+
 
 Regular meta-reinforcement learning achieved a maximum return of approximately -1000. The oracle approach, however, achieved returns very close to zero. This is likely because the agent knows exactly the target velocity it is trying to achieve by accessing it in its state. 
 
-one 
+<img src="/figures/DQN/_eval_multi_augmented_dqn_1_query.png" alt="figure" width="400"/> 
 
 The approach with only one query of the reward function reached returns similar to the regular meta-reinforcement approach. Since the reward function in this environment is only dependent on the current state, it is reasonable that knowing the reward based on a current position and velocity is not enough information to deduce the direction towards the target velocity.
 
-two 
+<img src="/figures/DQN/_eval_multi_augmented_dqn_2_query.png" alt="figure" width="400"/> 
 
 The two-query approach, on the other hand, reaches a similar reward close to zero to the oracle approach. This approach provides information about a complete step, so the agent is able to deduce the direction it needs to go to reach the target velocity. For example, a query with a given velocity and a query with a velocity higher than the previous will show whether increasing the velocity improves or decreases the reward. If it improves, the agent knows to continue increasing velocity until it reaches the target. If it decreases, the agent can do the opposite. With this strategy, the agent can optimize its actions and maximize rewards. 
 
@@ -104,19 +105,19 @@ The PyBullet Gymperium implementation of HalfCheetah and OpenAI Spinning Up impl
 #### Results
 Providing the agent with access to the reward function again improved its returns in the HalfCheetah environment. 
 
-multitask figures
+<img src="/figures/DDPG/MultiTaskDDPG.png" alt="figure" width="400"/> 
 
 The regular meta-reinforcement learning approach was not able to improve its returns over time. This may be due to the agent not being able to detect the changing target direction and finding it optimal to try to stay in place.
 
-multitask oracles
+<img src="/figures/DDPG/MultiTaskDDPGAugmentedOracle.png" alt="figure" width="400"/> 
 
 This approach improved its returns as the agent completed more tasks. It was able to exceed a return of 6000 (after averaging across all 5 tests with different seeds). This makes sense since the agent has access to the target direction in its state.
 
-multitask querys
+<img src="/figures/DDPG/MultiTaskDDPGQuery.png" alt="figure" width="400"/> 
 
 Similar to the previous approach, the agent improves its returns and is able to exceed a reward of 5000. The agent has enough information to deduce the target direction for a given task, so it is expected that it performs similarly to the oracle approach.
 
-multitask autos
+<img src="/figures/DDPG/MultiTaskDDPGAutoQuery.png" alt="figure" width="400"/> 
 
 This approach achieves a maximum return of about 4000. This approach is expected to perform similarly to the query approach, the only difference being that it has to observe one transition before it is able to acquire the appropriate inputs to query the reward function. It is possible that this delay is reason for the slight difference in returns. However, it still received returns in a similar range to the query approach. 
 
