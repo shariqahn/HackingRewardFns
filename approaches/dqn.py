@@ -31,8 +31,8 @@ class SingleTaskDQN(Approach):
         self.rng = rng 
         self.batch_size = 32
         self.env_shape = 0 if isinstance(action_space.sample(), int) else action_space.sample().shape
-        # self.num_actions = action_space.n
-        self.num_actions = action_space.shape[0]
+        self.num_actions = action_space.n
+        # self.num_actions = action_space.shape[0]
         self.memory_capacity = 2000
         self.net = False
 
@@ -120,34 +120,34 @@ class SingleTaskAugmentedDQN(SingleTaskDQN):
         super().__init__(*args, **kwargs)
 
     def process_state(self, state):
-        query = self.reward_function._target
+        query = self.reward_function(None, None, None, True)
         # ipdb.set_trace()
         return np.append(state, query)
         
 
-class MultiTaskAugmentedDQN(SingleTaskAugmentedDQN):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+# class MultiTaskAugmentedDQN(SingleTaskAugmentedDQN):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
 
-    def reset(self, reward_function):
-        self.reward_function = reward_function
+#     def reset(self, reward_function):
+#         self.reward_function = reward_function
 
 
-class MultiTaskAugmentedOracle(MultiTaskAugmentedDQN):
+class MultiTaskAugmentedOracle(MultiTaskDQN):
     def process_state(self, state):
         query = self.reward_function(None, None, None, True)
         # ipdb.set_trace()
         return np.append(state, query)
 
 
-class MultiTaskDQNOneQuery(MultiTaskAugmentedDQN):
+class MultiTaskDQNOneQuery(MultiTaskDQN):
     def process_state(self, state):
         query = self.reward_function(np.array([1,1]),1, np.array([2,2])) 
         # ipdb.set_trace()
         return np.append(state, query)
 
 
-class MultiTaskDQNTwoQuery(MultiTaskAugmentedDQN):
+class MultiTaskDQNTwoQuery(MultiTaskDQN):
     def process_state(self, state):
         query = [self.reward_function(np.array([1,1]),1, np.array([2,2])), self.reward_function(np.array([-1,-1]),1, np.array([0,0]))]
 

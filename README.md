@@ -67,20 +67,39 @@ The environment used for this experiment is a slider environment created in Open
 The same approaches for the previous experiment were used for that of the slider environment. However, the approach for augmented reinforcement learn differs slightly. Here, the state was augmented with queries of the reward function rather than the entire reward function like in the grid world. An oracle approach adds the target velocity to the state to provide insight into the agent's ideal performance. Then, an approach with one query and that of two queries was created for testing how accessing the reward function affects agent performance. The agent is able to query the reward function by offering a state s, an action a, and the next state after taking action a in state s. In return, it receives the reward from that state and appends it to the agent's state.
 
 #### Experimental Details
+The slider environment was created using OpenAI Gym. In this experiment, the agent completes 600 episodes with a maximum of 25 steps in each. Each episode is a task with a random target velocity between -10 and 10. Each approach was run with 25 seeds and those results were averaged together. 
 
 #### Results
+
 
 ### Environment with Continuous States and Discrete Actions
 #### Environment
 This experiment uses the popular meta-reinforcement learning environment, HalfCheetah. The state keeps track of the positions and velocities of different parts of the cheetah. The actions are NO ONE KNOWS LOL. The goal in this environment is to make the cheetah move as far as possible in the target direction.
 
 #### Approaches
-The approaches for this experiment are similar to the slider experiment. However, a single task approach was not tested because it is known that a single task approach can not adapt to a new task in such a complex environment. In addition, the two query approach is not included because one query is sufficient for deducing the target direction. 
+The approaches for this experiment are similar to the slider experiment. However, a single task approach was not tested because it is known that a single task approach can not adapt to a new task in such a complex environment. In addition, the two query approach is not included because one query is sufficient for deducing the target direction. An automatic query approach is added in order to test the agents ability to access the reward function more independently. Instead of hard-coding the inputs into the query for the reward function, the agent uses its first observed transition in the environment as inputs for the query.
 
 #### Experimental Details
-
+The PyBullet Gymperium implementation of HalfCheetah and OpenAI Spinning Up implementation of DDPG were used for this experiment. In order to produce comparable results to the Spinning Up DDPG experiments with MuJoCo HalfCheetah, the same hyperparamaters from their experiments were used for this one. The agent completes 200 episodes in the environment, each with 1000 steps. Each episode is a task that requires the cheetah to move in a random direction, either right or left, to earn rewards. Every tenth episode is used for evaluation, which in this case means not adding any noise to the selected action in a given state. Each approach was tested with 5 different seeds.
 
 #### Results
+Providing the agent with access to the reward function again improved its returns in the HalfCheetah environment. 
+
+multitask figures
+
+The regular meta-reinforcement learning approach was not able to improve its returns over time. This may be due to the agent not being able to detect the changing target direction and finding it optimal to try to stay in place.
+
+multitask oracles
+
+This approach improved its returns as the agent completed more tasks. It was able to exceed a return of 6000 (after averaging across all 5 tests with different seeds). This makes sense since the agent has access to the target direction in its state.
+
+multitask querys
+
+Similar to the previous approach, the agent improves its returns and is able to exceed a reward of 5000. The agent has enough information to deduce the target direction for a given task, so it is expected that it performs similarly to the oracle approach.
+
+multitask autos
+
+This approach achieves a maximum return of about 4000. This approach is expected to perform similarly to the query approach, the only difference being that it has to observe one transition before it is able to acquire the appropriate inputs to query the reward function. It is possible that this delay is reason for the slight difference in returns. However, it still received returns in a similar range to the query approach. 
 
 ## Conclusion
 

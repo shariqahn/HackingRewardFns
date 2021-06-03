@@ -8,11 +8,17 @@ from test import num_tasks, eval_interval
 
 # print(pickle.load(open("sample.pkl",'rb')))
 for approach in (
+    'SingleTaskDQN',
+    'SingleTaskAugmentedDQN',
+    # 'MultiTaskAugmentedOracle',
+    # 'MultiTaskDQNOneQuery',
+    # 'MultiTaskDQNTwoQuery',
+    # 'MultiTaskDQN',
     # 'SingleTaskDDPG',
     # 'MultiTaskDDPG',
     # 'MultiTaskDDPGAugmentedOracle',
     # 'MultiTaskDDPGQuery',
-    'MultiTaskDDPGAutoQuery',
+    # 'MultiTaskDDPGAutoQuery',
     # 'MultiTaskAugmentedOracle',
     # 'MultiTaskDQNOneQuery',
     # 'MultiTaskDQNTwoQuery',
@@ -31,19 +37,17 @@ for approach in (
     # elif approach == 'Multitask with Hacking':
     #     file = 'multitask_augmented.pkl'
     if approach == 'SingleTaskDQN':
-        file = 'eval_single_dqn.pkl'
+        file = '_eval_single_dqn.pkl'
     elif approach == 'MultiTaskDQN':
-        file = 'eval_multi_dqn.pkl'
+        file = '_eval_multi_dqn.pkl'
     elif approach == 'SingleTaskAugmentedDQN':
-        file = 'eval_single_augmented_dqn.pkl'
-    elif approach == 'MultiTaskAugmentedDQN':
-        file = 'eval_multi_augmented_dqn.pkl'
+        file = '_eval_single_augmented_dqn.pkl'
     elif approach == 'MultiTaskAugmentedOracle':
-        file = 'eval_MultiTaskAugmentedOracle.pkl'
+        file = '_eval_MultiTaskAugmentedOracle.pkl'
     elif approach == 'MultiTaskDQNOneQuery':
-        file = 'eval_multi_augmented_dqn_1_query.pkl'
+        file = '_eval_multi_augmented_dqn_1_query.pkl'
     elif approach == 'MultiTaskDQNTwoQuery':
-        file = 'eval_multi_augmented_dqn_2_query.pkl'
+        file = '_eval_multi_augmented_dqn_2_query.pkl'
     elif approach == 'SingleTaskDDPG':
         file = 'SingleTaskDDPG.pkl'
     elif approach == 'MultiTaskDDPG':
@@ -57,41 +61,48 @@ for approach in (
 
     rewards, positions, targets, results = pickle.load(open('results/'+file,'rb'))
     num_eval_tasks = len(rewards)
-    save_to = 'figures/DDPG/' + file[:-4] + '.png'
+    # save_to = 'figures/DDPG/' + file[:-4] + '.png'
+    save_to = 'figures/DQN/' + file[:-4] + '.png'
     
     # Data for plotting
     # x = eval_interval*np.arange(num_eval_tasks)
 
-    # TODO: add error bars!!!
     x = eval_interval*np.arange(len(results))
     fig, ax = plt.subplots()
     ax.plot(x,results)
 
+    # std = np.std(rewards, axis=0)
+    # print(std)
+    # print(len(results), len(rewards[0]), len(std))
+
+    # ax.fill_between(x, results-std, results+std, alpha=0.25)
+
     ax.set(xlabel='Number of Episodes', ylabel='Return',
            title=approach)
-    # ax.set_ylim(ymax=0, ymin=-1e4)
+    # ax.set_ylim(ymax=6200, ymin=-1250)
+    # ax.set_ylim(ymax=0, ymin=-10000)
     ax.grid()
 
     fig.savefig(save_to)
 
 
     # plots states across last 2 episodes for each seed in separate line
-    fig, ax = plt.subplots()
-    seed = 0
-    for i in range(len(positions[seed])):
-        episode = positions[seed][i]
-        # print(targets[i])
-        if targets[seed][i] == 1.0:
-            ax.plot(range(len(episode)), episode, label='direction = right', color='b')
-        else:
-            ax.plot(range(len(episode)), episode, label='direction = left', color='r')
-    ax.set(xlabel='Number of Steps', ylabel='Position',
-           title=approach)
-    # ax.set_ylim(ymax=3750, ymin=-1000)
-    ax.grid()
-    # ax.legend()
+    # fig, ax = plt.subplots()
+    # for seed in range(5):
+    #     for i in range(-2,0,1):
+    #         episode = positions[seed][i]
+    #         # print(targets[i])
+    #         if targets[seed][i] == 1.0:
+    #             ax.plot(range(len(episode)), episode, label='direction = right', color='b')
+    #         else:
+    #             ax.plot(range(len(episode)), episode, label='direction = left', color='r')
+    # ax.set(xlabel='Number of Steps', ylabel='Position',
+    #        title=approach + ' Episode Behavior')
+    # ax.set_ylim(ymax=.6, ymin=-.6)
+    # ax.grid()
+    # # ax.legend()
 
-    fig.savefig(save_to[:-4] + '_episodes.png')
+    # fig.savefig(save_to[:-4] + '_episodes.png')
 
     # plot with max return reference line
     # plt.clf()
@@ -117,20 +128,21 @@ for approach in (
     # plt.legend()
     # plt.savefig(save_to[:-4] + '_reference.png')
 
-    # # plot of scores
-    # x = eval_interval*np.arange(num_eval_tasks)
+    # plot of scores
+    x = eval_interval*np.arange(num_eval_tasks)
     # z = scores
+    z = positions
 
-    # fig, ax = plt.subplots()
-    # ax.plot(x,z)
+    fig, ax = plt.subplots()
+    ax.plot(x,z)
 
-    # ax.set(xlabel='Number of Episodes', ylabel='Policy Scores',
-    #        title=approach)
-    # # ax.set_ylim(ymax=0, ymin=-1000000)
+    ax.set(xlabel='Number of Episodes', ylabel='Policy Scores',
+           title=approach)
+    ax.set_ylim(ymax=2, ymin=-1)
 
-    # ax.grid()
+    ax.grid()
 
-    # fig.savefig(save_to[:-4]+'_scores.png')
+    fig.savefig(save_to[:-4]+'_scores.png')
 
     # y = goals
 
