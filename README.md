@@ -41,12 +41,15 @@ For all approaches, the agent must complete 40 tasks, where each task requires t
 #### Results
 Allowing the agent to have access to the reward function had no effect on single-task reinforcement learning but made it possible for the agent to increase its returns during meta-reinforcement learning.
  
-![Figure 2](/figures/Q-learning/random.png =100x20 "Figure 2")
+<!-- ![Figure 2](/figures/Q-learning/random.png =100x20 "Figure 2") -->
+<img src="/figures/Q-learning/random.png" alt="figure" width="200"/>
 
 The approach that gave the agent a random policy that randomly selected an action every time performed the worst (Figure 2). This is an expected result, since the agent has no strategy to improve its returns.
   
-![Figure 3](/figures/Q-learning/single_task.png "Figure 3")
-![Figure 3](/figures/Q-learning/single_task_augmented.png "Figure 3")
+<!-- ![Figure 3](/figures/Q-learning/single_task.png "Figure 3")
+![Figure 3](/figures/Q-learning/single_task_augmented.png "Figure 3") -->
+<img src="/figures/Q-learning/single_task.png" alt="figure" width="200"/>
+<img src="/figures/Q-learning/single_task_augmented.png" alt="figure" width="200"/>
 
 The single task, regular reinforcement learning algorithms performed slightly better than the random policy (Figure 3). There is likely no upward trend as the number of completed episodes increases because this algorithm tackles each new task as if it has no prior knowledge about similar tasks. However, there is some learning that occurs during a single episode, hence the improvement in returns in comparison to the random policy. There is no difference between the single task algorithm with hacking the reward function and that without because within a single episode, the reward function information in the state never changes. So, the agent is not able to learn anything from this information. 
   
