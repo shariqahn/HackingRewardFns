@@ -50,7 +50,7 @@ Allowing the agent to have access to the reward function had no effect on single
 
 The approach that gave the agent a random policy that randomly selected an action every time performed the worst (Figure 2). This is an expected result, since the agent has no strategy to improve its returns.
 
-<div style="justify-content:space-around;">
+<div style="display: flex;justify-content:space-around;">
     <div style="display: inline-block;">
         <img src="/figures/Q-learning/single_task.png" alt="figure" width="400"/>
     </div>
