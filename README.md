@@ -107,7 +107,7 @@ The two-query approach, on the other hand, reaches a similar reward close to zer
 
 ### Environment with Continuous States and Discrete Actions
 #### Environment
-This experiment uses the popular meta-reinforcement learning environment, HalfCheetah. The state keeps track of the positions and velocities of different parts of the cheetah. The actions are NO ONE KNOWS LOL. The goal in this environment is to make the cheetah move as far as possible in the target direction.
+This experiment uses the popular meta-reinforcement learning environment, HalfCheetah. The state keeps track of the positions and velocities of different parts of the cheetah. The actions describe the torque applied to the joints of the cheetah. The goal in this environment is to make the cheetah move as far as possible in the target direction.
 
 #### Approaches
 The approaches for this experiment are similar to the slider experiment. However, a single task approach was not tested because it is known that a single task approach can not adapt to a new task in such a complex environment. In addition, the two query approach is not included because one query is sufficient for deducing the target direction. An automatic query approach is added in order to test the agents ability to access the reward function more independently. Instead of hard-coding the inputs into the query for the reward function, the agent uses its first observed transition in the environment as inputs for the query.
